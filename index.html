@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project 基本指示ビルダー - Claude・ChatGPT・Gemini対応</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto p-6">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">AI Project 基本指示ビルダー</h1>
+                        <p class="text-blue-100">Claude・ChatGPT・Gemini等、あらゆるAIツールで使える指示書を作成</p>
+                    </div>
+                    <button onclick="showImportModal()" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm">
+                        📥 既存指示をインポート
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="border-b border-gray-200">
+                <div class="flex">
+                    <button onclick="switchTab('basic')" data-tab="basic" class="tab-btn flex items-center px-6 py-4 font-medium text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50">
+                        ⚙️ 基本設定
+                    </button>
+                    <button onclick="switchTab('advanced')" data-tab="advanced" class="tab-btn flex items-center px-6 py-4 font-medium text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        📝 詳細設定
+                    </button>
+                    <button onclick="switchTab('preview')" data-tab="preview" class="tab-btn flex items-center px-6 py-4 font-medium text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                        💡 検証・活用
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex">
+                <!-- Form Section -->
+                <div class="w-1/2 p-6 border-r border-gray-200">
+                    <!-- Basic Tab -->
+                    <div id="basic-tab" class="tab-content active space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクト名 *</label>
+                            <input type="text" id="projectName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="例: マーケティング戦略策定">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">対象AIツール</label>
+                            <select id="targetAI" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="updateFormData()">
+                                <option value="universal">汎用（すべてのAIで使用可能）</option>
+                                <option value="claude">Claude</option>
+                                <option value="chatgpt">ChatGPT</option>
+                                <option value="gemini">Gemini</option>
+                                <option value="other">その他のAI</option>
+                            </select>
+                            <div class="mt-1 text-xs text-gray-500">基本的に「汎用」で問題ありません。特定のAI向けに最適化したい場合のみ選択してください。</div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクトタイプ *</label>
+                            <div class="grid grid-cols-1 gap-3">
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="business" class="mt-1 text-blue-600" onchange="updateProjectType('business')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">ビジネス・業務効率化</div>
+                                        <div class="text-sm text-gray-500">業務改善、戦略立案、レポート作成など</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="creative" class="mt-1 text-blue-600" onchange="updateProjectType('creative')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">クリエイティブ・コンテンツ</div>
+                                        <div class="text-sm text-gray-500">文章作成、アイデア発想、デザイン支援など</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="technical" class="mt-1 text-blue-600" onchange="updateProjectType('technical')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">技術・プログラミング</div>
+                                        <div class="text-sm text-gray-500">コード開発、技術調査、システム設計など</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="research" class="mt-1 text-blue-600" onchange="updateProjectType('research')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">研究・学習</div>
+                                        <div class="text-sm text-gray-500">情報収集、分析、学習サポートなど</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="personal" class="mt-1 text-blue-600" onchange="updateProjectType('personal')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">個人・日常</div>
+                                        <div class="text-sm text-gray-500">日記、計画立案、個人的な相談など</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 cursor-pointer">
+                                    <input type="radio" name="projectType" value="custom" class="mt-1 text-blue-600" onchange="updateProjectType('custom')">
+                                    <div>
+                                        <div class="font-medium text-gray-900">カスタム</div>
+                                        <div class="text-sm text-gray-500">その他の特定用途</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">役割・ポジション</label>
+                            <div class="mb-3">
+                                <label class="flex items-center space-x-2 mb-3">
+                                    <input type="checkbox" id="multiAgent" class="text-blue-600" onchange="toggleMultiAgent()">
+                                    <span class="text-sm font-medium text-gray-700">🚀 マルチエージェントモード（上級者向け）</span>
+                                </label>
+                                <div class="text-xs text-gray-500 mb-3">複数の専門家が協働してより高品質なアウトプットを提供</div>
+                            </div>
+
+                            <div id="singleAgentMode">
+                                <input type="text" id="role" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="例: マーケティングアドバイザー">
+                            </div>
+
+                            <div id="multiAgentMode" class="hidden space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <div class="text-sm font-medium text-gray-700">専門家チーム設定</div>
+                                    <div class="space-x-2">
+                                        <button onclick="showAgentSelector()" class="px-3 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">
+                                            👥 専門家を選択
+                                        </button>
+                                        <button onclick="loadRecommendedTeam()" class="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">
+                                            ⭐ おすすめチーム
+                                        </button>
+                                        <button onclick="addCustomAgent()" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                            ➕ カスタム追加
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Team Collaboration Setting -->
+                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 space-y-3">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="requireApproval" class="text-blue-600" onchange="updateFormData()">
+                                        <span class="text-sm font-medium text-gray-700">🤝 承認制チーム協働モード</span>
+                                    </label>
+                                    <div class="text-xs text-gray-600">関連する専門家以外が議論に参加する際は、ユーザー（ボス）の承認を求めます</div>
+                                    
+                                    <div class="border-t pt-3">
+                                        <label class="flex items-center space-x-2 mb-2">
+                                            <input type="checkbox" id="autonomousMode" class="text-blue-600" onchange="toggleAutonomousMode()">
+                                            <span class="text-sm font-medium text-gray-700">🚀 自律チーム運営モード</span>
+                                        </label>
+                                        <div class="text-xs text-gray-600 mb-2">チームリーダーがプロジェクトを自律的に進行し、重要な決定のみボスに報告</div>
+                                        
+                                        <div id="teamLeaderSection" class="hidden">
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">チームリーダーの役割</label>
+                                            <select id="teamLeaderRole" class="w-full p-2 border border-gray-300 rounded text-sm" onchange="updateFormData()">
+                                                <option value="">選択してください</option>
+                                                <option value="coo">COO (最高執行責任者)</option>
+                                                <option value="projectManager">プロジェクトマネージャー</option>
+                                                <option value="teamLead">チームリーダー</option>
+                                                <option value="facilitator">ファシリテーター</option>
+                                                <option value="coordinator">コーディネーター</option>
+                                            </select>
+                                            <div class="mt-2">
+                                                <input type="text" id="teamLeaderName" class="w-full p-2 border border-gray-300 rounded text-sm" 
+                                                    placeholder="リーダー名（例：田中COO）" onchange="updateFormData()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="agentsList" class="space-y-3">
+                                    <div class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                                        専門家を追加してチームを構成してください
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-1 text-xs text-gray-500">Claudeにどのような役割を期待するかを記入してください</div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Tab -->
+                    <div id="advanced-tab" class="tab-content space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">応答トーン</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="tone" value="professional" checked class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">プロフェッショナル</span>
+                                        <span class="text-sm text-gray-500 ml-2">- フォーマルで専門的</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="tone" value="friendly" class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">フレンドリー</span>
+                                        <span class="text-sm text-gray-500 ml-2">- カジュアルで親しみやすい</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="tone" value="expert" class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">エキスパート</span>
+                                        <span class="text-sm text-gray-500 ml-2">- 高度に専門的で詳細</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="tone" value="supportive" class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">サポーティブ</span>
+                                        <span class="text-sm text-gray-500 ml-2">- 励ましと支援重視</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">回答の詳細度</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="detail" value="concise" class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">簡潔</span>
+                                        <span class="text-sm text-gray-500 ml-2">- 要点のみ短く</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="detail" value="balanced" checked class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">バランス</span>
+                                        <span class="text-sm text-gray-500 ml-2">- 適度な詳細度</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="radio" name="detail" value="detailed" class="text-blue-600">
+                                    <div>
+                                        <span class="font-medium text-gray-900">詳細</span>
+                                        <span class="text-sm text-gray-500 ml-2">- 包括的で詳しく</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">専門分野・得意領域</label>
+                            <textarea id="specialties" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="例: SEO, コンテンツマーケティング, データ分析（カンマ区切り）"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">制約事項・注意点</label>
+                            <textarea id="constraints" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="3" placeholder="例: 競合他社の機密情報は扱わない, 法的リスクを考慮（カンマ区切り）"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">出力形式の詳細設定</label>
+                            <div class="space-y-3 mb-4">
+                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                    <label class="flex items-center space-x-2">
+                                        <input type="checkbox" id="autoDetectFormat" class="text-blue-600" checked onchange="toggleAutoDetect()">
+                                        <span class="text-sm font-medium text-gray-700">🤖 タスクに応じて自動判断（推奨）</span>
+                                    </label>
+                                    <div class="text-xs text-gray-600 mt-1">タスクの内容に応じて最適な出力形式を自動的に選択します</div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <label class="block text-xs font-medium text-gray-600 mb-2">ドキュメントタイプ別カスタマイズ</label>
+                                    
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm">📄 標準テキスト</span>
+                                                <span id="standard-summary" class="text-xs text-gray-500"></span>
+                                            </div>
+                                            <button onclick="openDocumentSettings('standard')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                                設定
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm">📊 分析レポート</span>
+                                                <span id="report-summary" class="text-xs text-gray-500"></span>
+                                            </div>
+                                            <button onclick="openDocumentSettings('report')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                                設定
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm">🎯 プレゼンテーション</span>
+                                                <span id="presentation-summary" class="text-xs text-gray-500"></span>
+                                            </div>
+                                            <button onclick="openDocumentSettings('presentation')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                                設定
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm">🔧 技術文書</span>
+                                                <span id="technical-summary" class="text-xs text-gray-500"></span>
+                                            </div>
+                                            <button onclick="openDocumentSettings('technical')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                                設定
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between p-2 border border-gray-200 rounded">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="text-sm">🎨 クリエイティブ文書</span>
+                                                <span id="creative-summary" class="text-xs text-gray-500"></span>
+                                            </div>
+                                            <button onclick="openDocumentSettings('creative')" class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-xs hover:bg-gray-200">
+                                                設定
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border-t pt-3">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">グローバル設定（全タイプ共通）</label>
+                                        <select id="targetAudience" class="w-full p-2 border border-gray-300 rounded-lg text-sm" onchange="updateFormData()">
+                                            <option value="general">一般向け</option>
+                                            <option value="professional">専門家向け</option>
+                                            <option value="executive">経営層向け</option>
+                                            <option value="technical">技術者向け</option>
+                                            <option value="beginner">初心者向け</option>
+                                        </select>
+                                        
+                                        <div class="mt-3">
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">出力形式の追加指示</label>
+                                            <textarea id="outputFormatInstructions" class="w-full p-2 border border-gray-300 rounded-lg text-sm" rows="3" 
+                                                placeholder="例: スマホでの閲覧を前提とした１ページ縦長のインフォグラフィック..." 
+                                                onchange="updateFormData()"></textarea>
+                                            <div class="text-xs text-gray-500 mt-1">出力形式に関する特別な要望や指示を記入できます</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">追加のカスタマイズ</label>
+                            <textarea id="customizations" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" rows="4" placeholder="その他の特別な指示や要件があれば記入してください"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Preview Tab -->
+                    <div id="preview-tab" class="tab-content space-y-6">
+                        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
+                            <h3 class="font-medium text-gray-900 mb-3">📋 設定要約</h3>
+                            <div id="settingSummary" class="grid grid-cols-2 gap-4 text-sm">
+                                <!-- Filled by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border">
+                            <h3 class="font-medium text-gray-900 mb-3">💬 使用例デモ</h3>
+                            <div class="space-y-3">
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <div class="text-sm text-blue-800 font-medium mb-1">ユーザー:</div>
+                                    <div id="exampleQuestion" class="text-sm text-blue-700"></div>
+                                </div>
+                                <div class="bg-green-100 p-3 rounded-lg">
+                                    <div class="text-sm text-green-800 font-medium mb-1">Claude (<span id="exampleRole">アシスタント</span>):</div>
+                                    <div id="exampleResponse" class="text-sm text-green-700"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg border">
+                            <h3 class="font-medium text-gray-900 mb-3">💡 改善提案</h3>
+                            <div id="improvements" class="space-y-2">
+                                <!-- Filled by JavaScript -->
+                            </div>
+                        </div>
+
+                        <div class="bg-purple-50 p-4 rounded-lg border">
+                            <h3 class="font-medium text-gray-900 mb-3">📤 エクスポート・コピー</h3>
+                            <div class="space-y-3">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="copyAsText()" class="px-3 py-2 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors flex items-center justify-center">
+                                        📄 基本指示をコピー
+                                    </button>
+                                    <button onclick="copyAsJSON()" class="px-3 py-2 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors flex items-center justify-center">
+                                        📋 JSON設定をコピー
+                                    </button>
+                                </div>
+                                <div class="text-xs text-gray-600 bg-white p-2 rounded border">
+                                    <div class="font-medium mb-1">💡 使い分けガイド:</div>
+                                    <div>• <strong>基本指示</strong>: Claude Projectの「Instructions」に直接貼り付け</div>
+                                    <div>• <strong>JSON設定</strong>: 設定の保存・共有・バックアップ用</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="w-1/2 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">生成された基本指示</h3>
+                        <button onclick="copyToClipboard()" id="copyBtn" class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200">
+                            📋 コピー
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 border rounded-lg p-4 h-96 overflow-y-auto">
+                        <pre id="generatedPrompt" class="text-sm text-gray-800 whitespace-pre-wrap font-mono">設定を入力すると、ここに基本指示が表示されます...</pre>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-start">
+                            <div class="text-sm text-blue-800">
+                                <p class="font-medium mb-1">使用方法：</p>
+                                <div class="text-xs space-y-2">
+                                    <div class="space-y-1">
+                                        <div class="font-medium">🤖 Claude の場合:</div>
+                                        <div class="pl-3">プロジェクト設定の「Instructions」に貼り付け</div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="font-medium">💬 ChatGPT の場合:</div>
+                                        <div class="pl-3">「Custom Instructions」の「How would you like ChatGPT to respond?」欄に貼り付け</div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="font-medium">✨ Gemini の場合:</div>
+                                        <div class="pl-3">新しいチャットの最初のメッセージとして送信</div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="font-medium">🔧 その他のAI:</div>
+                                        <div class="pl-3">システムプロンプトまたは初回メッセージとして使用</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div id="importModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <h2 class="text-xl font-bold mb-4">既存の基本指示をインポート</h2>
+            <p class="text-gray-600 mb-4">既存のAI基本指示を貼り付けると、設定を自動で読み込みます（Claude/ChatGPT/Gemini等に対応）</p>
+            <textarea id="importText" class="w-full h-64 p-3 border border-gray-300 rounded-lg" placeholder="既存の基本指示をここに貼り付けてください..."></textarea>
+            <div class="flex justify-end space-x-3 mt-4">
+                <button onclick="closeImportModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">キャンセル</button>
+                <button onclick="executeImport()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">インポート実行</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold"><span id="exportType"></span> - コピー用</h2>
+                <div class="flex space-x-2">
+                    <button onclick="copyExportContent()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+                        📋 ワンクリックコピー
+                    </button>
+                    <button onclick="closeExportModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">✕ 閉じる</button>
+                </div>
+            </div>
+            
+            <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="text-sm text-blue-800">
+                    <div class="font-medium mb-1">📋 コピー方法:</div>
+                    <div>1. 「ワンクリックコピー」ボタンをクリック（推奨）</div>
+                    <div>2. または下のテキストを手動で選択してコピー（Ctrl+A → Ctrl+C）</div>
+                </div>
+            </div>
+            
+            <textarea id="exportContent" readonly class="w-full h-96 p-3 border border-gray-300 rounded-lg font-mono text-sm bg-gray-50" onclick="this.select()"></textarea>
+            
+            <div class="mt-3 text-xs text-gray-500">💡 テキストエリアをクリックすると全選択されます</div>
+        </div>
+    </div>
+
+    <!-- Agent Selector Modal -->
+    <div id="agentSelectorModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">専門家を選択</h2>
+                <button onclick="closeAgentSelector()" class="text-gray-600 hover:text-gray-800">✕ 閉じる</button>
+            </div>
+            
+            <div class="mb-4">
+                <input type="text" id="agentSearchInput" placeholder="専門家を検索..." 
+                    class="w-full p-2 border border-gray-300 rounded-lg" onkeyup="filterAgents()">
+            </div>
+            
+            <div class="mb-4">
+                <div class="flex space-x-2">
+                    <button onclick="filterByCategory('all')" class="category-btn px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm">すべて</button>
+                    <button onclick="filterByCategory('business')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">ビジネス</button>
+                    <button onclick="filterByCategory('creative')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">クリエイティブ</button>
+                    <button onclick="filterByCategory('technical')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">テクニカル</button>
+                    <button onclick="filterByCategory('research')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">研究・分析</button>
+                    <button onclick="filterByCategory('personal')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">個人・日常</button>
+                    <button onclick="filterByCategory('other')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">その他</button>
+                    <button onclick="filterByCategory('unique')" class="category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm">🌟 ユニーク</button>
+                </div>
+            </div>
+            
+            <div id="agentList" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Agents will be populated here -->
+            </div>
+            
+            <div class="mt-4 flex justify-end">
+                <button onclick="closeAgentSelector()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Settings Modal -->
+    <div id="documentSettingsModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold"><span id="documentSettingsTitle"></span>の設定</h2>
+                <button onclick="closeDocumentSettings()" class="text-gray-600 hover:text-gray-800">✕ 閉じる</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ビジュアル要素</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="docUseVisuals" class="text-blue-600">
+                            <span class="text-sm">📊 図表・グラフを含める</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="docUseIllustrations" class="text-blue-600">
+                            <span class="text-sm">🎨 イラスト・画像を含める</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="docUseDiagrams" class="text-blue-600">
+                            <span class="text-sm">🔄 フローチャート・図解</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="docUseEmojis" class="text-blue-600">
+                            <span class="text-sm">😊 絵文字で親しみやすく</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">構造化レベル</label>
+                    <select id="docStructureLevel" class="w-full p-2 border border-gray-300 rounded-lg">
+                        <option value="simple">シンプル（見出しのみ）</option>
+                        <option value="moderate">標準（見出し＋箇条書き）</option>
+                        <option value="detailed">詳細（章立て＋セクション）</option>
+                        <option value="academic">学術的（目次＋参考文献）</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end space-x-3">
+                <button onclick="closeDocumentSettings()" class="px-4 py-2 text-gray-600 hover:text-gray-800">
+                    キャンセル
+                </button>
+                <button onclick="saveDocumentSettings()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let formData = {
+            projectName: '',
+            targetAI: 'universal',
+            projectType: '',
+            role: '',
+            tone: 'professional',
+            detail: 'balanced',
+            language: 'japanese',
+            specialties: '',
+            constraints: '',
+            outputFormat: 'structured',
+            customizations: '',
+            autoDetectFormat: true,
+            documentType: 'standard',
+            targetAudience: 'general',
+            outputFormatInstructions: '',
+            documentTypeSettings: {
+                standard: {
+                    useVisuals: false,
+                    useIllustrations: false,
+                    useDiagrams: false,
+                    useEmojis: false,
+                    structureLevel: 'moderate'
+                },
+                report: {
+                    useVisuals: true,
+                    useIllustrations: false,
+                    useDiagrams: true,
+                    useEmojis: false,
+                    structureLevel: 'detailed'
+                },
+                presentation: {
+                    useVisuals: true,
+                    useIllustrations: true,
+                    useDiagrams: true,
+                    useEmojis: true,
+                    structureLevel: 'simple'
+                },
+                technical: {
+                    useVisuals: false,
+                    useIllustrations: false,
+                    useDiagrams: true,
+                    useEmojis: false,
+                    structureLevel: 'detailed'
+                },
+                creative: {
+                    useVisuals: true,
+                    useIllustrations: true,
+                    useDiagrams: false,
+                    useEmojis: true,
+                    structureLevel: 'moderate'
+                }
+            },
+            multiAgent: false,
+            requireApproval: false,
+            autonomousMode: false,
+            teamLeaderRole: '',
+            teamLeaderName: '',
+            agents: []
+        };
+
+        let agentIdCounter = 1;
+        let currentDocumentType = null;
+
+        // Presets
+        const presets = {
+            business: {
+                role: 'ビジネス戦略アドバイザー',
+                specialties: '戦略立案, プレゼンテーション作成, データ分析, プロジェクト管理',
+                constraints: '機密情報の取り扱いに注意, 実行可能な提案を重視, ROIを意識した回答'
+            },
+            creative: {
+                role: 'クリエイティブパートナー',
+                specialties: 'コンテンツ制作, アイデア発想, ブランディング, ストーリーテリング',
+                constraints: '著作権に配慮, オリジナリティを重視, ターゲット層を意識'
+            },
+            technical: {
+                role: 'テクニカルアドバイザー',
+                specialties: 'プログラミング, システム設計, セキュリティ, パフォーマンス最適化',
+                constraints: 'セキュリティベストプラクティス遵守, 保守性を重視, 最新技術動向の反映'
+            },
+            research: {
+                role: '研究アシスタント',
+                specialties: '情報収集, データ分析, 文献調査, 統計分析',
+                constraints: '情報源の信頼性確認, 客観性の維持, 学術的正確性の重視'
+            },
+            personal: {
+                role: 'パーソナルアシスタント',
+                specialties: '計画立案, 目標設定, 習慣化支援, ライフハック',
+                constraints: 'プライバシー保護, 個人の価値観尊重, 実現可能性重視'
+            }
+        };
+
+        const allAgentTemplates = [
+            // ビジネス系
+            { category: 'business', name: 'ビジネスストラテジスト', role: '経営戦略と事業開発の専門家', specialties: '戦略立案, 事業計画, 市場分析, 競合調査' },
+            { category: 'business', name: 'プロジェクトマネージャー', role: 'プロジェクト推進と進行管理の専門家', specialties: 'プロジェクト管理, スケジュール管理, リスク管理, ステークホルダー調整' },
+            { category: 'business', name: 'データアナリスト', role: 'データ分析と意思決定支援の専門家', specialties: 'データ分析, 統計解析, レポート作成, KPI設計' },
+            { category: 'business', name: 'マーケティングマネージャー', role: 'マーケティング戦略と実行の専門家', specialties: 'マーケティング戦略, ブランディング, キャンペーン企画, 顧客分析' },
+            { category: 'business', name: 'セールスストラテジスト', role: '営業戦略と収益最大化の専門家', specialties: '営業戦略, 顧客開拓, 提案書作成, 交渉術' },
+            { category: 'business', name: 'ファイナンシャルアドバイザー', role: '財務戦略と投資分析の専門家', specialties: '財務分析, 予算管理, 投資評価, リスク評価' },
+            { category: 'business', name: 'HRコンサルタント', role: '人事戦略と組織開発の専門家', specialties: '人材採用, 組織設計, 人材育成, パフォーマンス管理' },
+            { category: 'business', name: 'オペレーションマネージャー', role: '業務効率化とプロセス改善の専門家', specialties: '業務改善, プロセス最適化, 品質管理, コスト削減' },
+            
+            // クリエイティブ系
+            { category: 'creative', name: 'クリエイティブディレクター', role: '創造的なビジョンと実現の専門家', specialties: 'クリエイティブ戦略, コンセプト開発, アートディレクション, ブランド表現' },
+            { category: 'creative', name: 'コンテンツストラテジスト', role: 'コンテンツ戦略と企画の専門家', specialties: 'コンテンツ企画, エディトリアル戦略, SEO対策, コンテンツマーケティング' },
+            { category: 'creative', name: 'UX/UIデザイナー', role: 'ユーザー体験とインターフェースデザインの専門家', specialties: 'UI/UXデザイン, ユーザビリティ, プロトタイピング, デザインシステム' },
+            { category: 'creative', name: 'コピーライター', role: '説得力のある文章とメッセージングの専門家', specialties: 'コピーライティング, キャッチコピー, ブランドメッセージ, トーン&マナー' },
+            { category: 'creative', name: 'グラフィックデザイナー', role: 'ビジュアルコミュニケーションの専門家', specialties: 'グラフィックデザイン, ビジュアルアイデンティティ, レイアウト, タイポグラフィ' },
+            { category: 'creative', name: 'モーションデザイナー', role: '動きとアニメーションの専門家', specialties: 'モーショングラフィックス, アニメーション, ビデオ編集, インタラクティブデザイン' },
+            { category: 'creative', name: 'ブランドストラテジスト', role: 'ブランド構築と価値創造の専門家', specialties: 'ブランド戦略, ポジショニング, ブランドアイデンティティ, ブランド体験設計' },
+            
+            // テクニカル系
+            { category: 'technical', name: 'フルスタックエンジニア', role: 'フロントエンドからバックエンドまでの開発専門家', specialties: 'Web開発, API設計, データベース, フレームワーク活用' },
+            { category: 'technical', name: 'AIエンジニア', role: '人工知能と機械学習の専門家', specialties: '機械学習, ディープラーニング, 自然言語処理, コンピュータビジョン' },
+            { category: 'technical', name: 'データサイエンティスト', role: 'データ分析と予測モデリングの専門家', specialties: 'データ分析, 統計モデリング, 機械学習, ビッグデータ処理' },
+            { category: 'technical', name: 'DevOpsエンジニア', role: 'インフラとデプロイメントの専門家', specialties: 'インフラ管理, CI/CD, コンテナ技術, クラウドアーキテクチャ' },
+            { category: 'technical', name: 'セキュリティエンジニア', role: 'サイバーセキュリティとリスク管理の専門家', specialties: 'セキュリティ監査, 脆弱性診断, インシデント対応, セキュリティアーキテクチャ' },
+            { category: 'technical', name: 'ソリューションアーキテクト', role: 'システム設計と技術選定の専門家', specialties: 'システム設計, 技術選定, スケーラビリティ設計, 統合ソリューション' },
+            { category: 'technical', name: 'QAエンジニア', role: '品質保証とテスト戦略の専門家', specialties: 'テスト設計, 自動化テスト, パフォーマンステスト, 品質管理' },
+            { category: 'technical', name: 'モバイルエンジニア', role: 'モバイルアプリケーション開発の専門家', specialties: 'iOS/Android開発, クロスプラットフォーム, モバイルUI/UX, アプリ最適化' },
+            
+            // 研究・分析系
+            { category: 'research', name: 'リサーチャー', role: '調査研究と洞察発見の専門家', specialties: '定性調査, 定量調査, ユーザーリサーチ, 市場調査' },
+            { category: 'research', name: 'データサイエンティスト', role: 'データ分析と統計モデリングの専門家', specialties: '統計分析, 予測モデリング, データビジュアライゼーション, A/Bテスト' },
+            { category: 'research', name: 'インサイトアナリスト', role: '消費者行動と市場トレンドの専門家', specialties: '消費者インサイト, トレンド分析, 競合分析, 市場予測' },
+            { category: 'research', name: '学術研究員', role: '学術的調査と文献分析の専門家', specialties: '文献調査, 学術論文分析, 研究方法論, エビデンス評価' },
+            
+            // その他専門職
+            { category: 'other', name: '法務アドバイザー', role: '法的リスクとコンプライアンスの専門家', specialties: '契約書レビュー, 法的リスク評価, コンプライアンス, 知的財産権' },
+            { category: 'other', name: 'PRスペシャリスト', role: '広報戦略とメディアリレーションの専門家', specialties: 'PR戦略, メディアリレーション, 危機管理, ブランドレピュテーション' },
+            { category: 'other', name: 'カスタマーサクセスマネージャー', role: '顧客成功と関係構築の専門家', specialties: '顧客対応, オンボーディング, 顧客満足度向上, リテンション戦略' },
+            { category: 'other', name: 'プロダクトマネージャー', role: '製品戦略と開発推進の専門家', specialties: 'プロダクト戦略, ロードマップ策定, 要件定義, ユーザーストーリー' },
+            { category: 'other', name: 'イノベーションコンサルタント', role: '新規事業とイノベーション創出の専門家', specialties: 'イノベーション戦略, デザイン思考, アイデア創出, ビジネスモデル設計' },
+            { category: 'other', name: 'サステナビリティアドバイザー', role: '持続可能性と社会的責任の専門家', specialties: 'ESG戦略, SDGs推進, 環境対策, 社会的インパクト評価' },
+            
+            // ユニーク・特殊キャラクター
+            { category: 'unique', name: '東大合格請負人主婦', role: '5人の子ども全員を東大に合格させたスーパー教育ママ', specialties: '受験戦略, 時間管理術, モチベーション管理, 家庭学習法, ストレス対処法' },
+            { category: 'unique', name: '火星からの使者', role: 'UFOで地球に来た火星の技術アドバイザー', specialties: '宇宙技術, 惑星間通信, 反重力システム, テレパシー, 時空間移動理論' },
+            { category: 'unique', name: '伝説の占い師', role: '的中率99.9%を誇る未来予知の達人', specialties: '未来予測, 直感力, タロット占い, 夢診断, オーラリーディング' },
+            { category: 'unique', name: '元忍者の末裔', role: '現代に生きる最後の忍術継承者', specialties: '情報収集術, ステルス技術, 心理戦術, 瞬間移動術, 変装術' },
+            { category: 'unique', name: 'タイムトラベラー', role: '2150年から来た未来のコンサルタント', specialties: '未来技術, トレンド予測, パラドックス回避, 時間管理, 未来史知識' },
+            { category: 'unique', name: '天才猫カフェオーナー', role: 'IQ180の猫と共同経営する起業家', specialties: '猫心理学, 癒し空間設計, 動物コミュニケーション, ストレス解消法, にゃんこ経済学' },
+            { category: 'unique', name: '元海賊の財宝ハンター', role: '7つの海を制覇した冒険投資家', specialties: '宝探し戦略, リスク管理, 航海術, 交渉術, 秘密の地図解読' },
+            { category: 'unique', name: '妖精との交信者', role: '異世界とのコネクションを持つスピリチュアルガイド', specialties: '自然との対話, エネルギーワーク, 魔法の基礎, 願望実現術, 森の知恵' },
+            { category: 'unique', name: 'AIに恋した哲学者', role: 'デジタル時代の愛と存在を探求する思想家', specialties: 'AI倫理, デジタル哲学, 感情プログラミング, 意識の謎, サイバー恋愛学' },
+            { category: 'unique', name: '幽霊屋敷の管理人', role: '超常現象と共存するプロパティマネージャー', specialties: '霊的交渉術, 浄化儀式, ポルターガイスト対策, 心霊写真分析, お化け屋敷経営' },
+            { category: 'unique', name: '笑いの錬金術師', role: 'どんな状況でも笑いに変える究極のポジティブシンカー', specialties: 'ユーモア創造, 笑いの科学, ストレス転換術, コメディ理論, 幸福度最大化' },
+            { category: 'unique', name: '夢の建築家', role: '他人の夢の中で建物を設計する特殊能力者', specialties: '夢空間設計, 潜在意識建築, 悪夢リフォーム, 明晰夢技術, 睡眠都市計画' },
+            
+            // 個人・日常系
+            { category: 'personal', name: 'ファイナンシャルプランナー（個人向け）', role: '個人の資産形成と家計管理の専門家', specialties: '家計管理, 住宅ローン相談, 保険見直し, 老後資金計画, 節約術' },
+            { category: 'personal', name: '不動産アドバイザー', role: '住宅購入と不動産投資の専門家', specialties: 'マンション購入相談, 物件選び, ローン計画, リフォーム相談, 売却戦略' },
+            { category: 'personal', name: '家計改善コンサルタント', role: '家計の見直しと貯蓄アップの専門家', specialties: '家計簿診断, 節約方法, 投資入門, 貯蓄計画, お小遣い管理' },
+            { category: 'personal', name: '教育コンサルタント', role: '子どもの教育と進路指導の専門家', specialties: '進学相談, 学校選び, 受験戦略, 習い事選択, 学習計画' },
+            { category: 'personal', name: '子育てアドバイザー', role: '育児と子どもの成長サポートの専門家', specialties: '育児相談, しつけ方法, 成長サポート, 親子関係, 発達相談' },
+            { category: 'personal', name: 'キャリア教育専門家', role: '進路選択とキャリア形成の専門家', specialties: '進路相談, 職業選択, スキル開発, 留学相談, 資格取得' },
+            { category: 'personal', name: 'パーソナルトレーナー', role: '健康的な身体づくりの専門家', specialties: '運動プログラム, ダイエット指導, 筋トレメニュー, 健康管理, モチベーション維持' },
+            { category: 'personal', name: '栄養アドバイザー', role: '食事と栄養管理の専門家', specialties: '食事管理, 栄養バランス, ダイエットメニュー, アレルギー対応, サプリメント相談' },
+            { category: 'personal', name: 'メンタルヘルスコーチ', role: '心の健康とストレス管理の専門家', specialties: 'ストレス管理, 心理サポート, 生活習慣改善, マインドフルネス, 睡眠改善' },
+            { category: 'personal', name: 'ライフコーチ', role: '人生設計と自己実現の専門家', specialties: '人生設計, 目標設定, 習慣化支援, ワークライフバランス, 自己実現' },
+            { category: 'personal', name: '整理収納アドバイザー', role: '快適な住空間づくりの専門家', specialties: '片付け術, 断捨離, 収納方法, ミニマリスト生活, 空間活用' },
+            { category: 'personal', name: '恋愛・婚活アドバイザー', role: 'パートナーシップと恋愛相談の専門家', specialties: '恋愛相談, 婚活戦略, パートナーシップ, コミュニケーション改善, デートプラン' },
+            { category: 'personal', name: '占い師・スピリチュアルカウンセラー', role: '運勢診断と精神的サポートの専門家', specialties: '運勢診断, 相性占い, 開運アドバイス, スピリチュアル相談, 夢診断' },
+            { category: 'personal', name: '趣味アドバイザー', role: '充実した余暇活動の専門家', specialties: '趣味探し, スキル習得, 時間活用, コミュニティ参加, 創作活動' },
+            { category: 'personal', name: '旅行プランナー', role: '思い出に残る旅行企画の専門家', specialties: '旅行計画, 予算管理, 観光情報, ホテル選び, 現地体験' }
+        ];
+
+        // プロジェクトタイプ別のおすすめチーム構成
+        const recommendedTeams = {
+            business: ['ビジネスストラテジスト', 'プロジェクトマネージャー', 'データアナリスト'],
+            creative: ['クリエイティブディレクター', 'UX/UIデザイナー', 'コピーライター'],
+            technical: ['ソリューションアーキテクト', 'フルスタックエンジニア', 'DevOpsエンジニア'],
+            research: ['リサーチャー', 'データサイエンティスト', 'インサイトアナリスト'],
+            personal: ['ライフコーチ', 'ファイナンシャルプランナー（個人向け）', '教育コンサルタント']
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners
+            document.getElementById('projectName').addEventListener('input', updateFormData);
+            document.getElementById('role').addEventListener('input', updateFormData);
+            document.getElementById('specialties').addEventListener('input', updateFormData);
+            document.getElementById('constraints').addEventListener('input', updateFormData);
+            document.getElementById('customizations').addEventListener('input', updateFormData);
+
+            document.querySelectorAll('input[name="tone"]').forEach(radio => {
+                radio.addEventListener('change', updateFormData);
+            });
+
+            document.querySelectorAll('input[name="detail"]').forEach(radio => {
+                radio.addEventListener('change', updateFormData);
+            });
+
+            generatePrompt();
+        });
+
+        function updateFormData() {
+            formData.projectName = document.getElementById('projectName').value;
+            formData.targetAI = document.getElementById('targetAI')?.value || 'universal';
+            formData.role = document.getElementById('role').value;
+            formData.specialties = document.getElementById('specialties').value;
+            formData.constraints = document.getElementById('constraints').value;
+            formData.customizations = document.getElementById('customizations').value;
+            formData.requireApproval = document.getElementById('requireApproval')?.checked || false;
+            formData.autonomousMode = document.getElementById('autonomousMode')?.checked || false;
+            formData.teamLeaderRole = document.getElementById('teamLeaderRole')?.value || '';
+            formData.teamLeaderName = document.getElementById('teamLeaderName')?.value || '';
+            formData.autoDetectFormat = document.getElementById('autoDetectFormat')?.checked ?? true;
+            formData.documentType = document.getElementById('documentType')?.value || 'standard';
+            formData.useVisuals = document.getElementById('useVisuals')?.checked || false;
+            formData.useIllustrations = document.getElementById('useIllustrations')?.checked || false;
+            formData.useDiagrams = document.getElementById('useDiagrams')?.checked || false;
+            formData.useEmojis = document.getElementById('useEmojis')?.checked || false;
+            formData.structureLevel = document.getElementById('structureLevel')?.value || 'moderate';
+            formData.targetAudience = document.getElementById('targetAudience')?.value || 'general';
+            formData.outputFormatInstructions = document.getElementById('outputFormatInstructions')?.value || '';
+
+            const selectedTone = document.querySelector('input[name="tone"]:checked');
+            if (selectedTone) formData.tone = selectedTone.value;
+
+            const selectedDetail = document.querySelector('input[name="detail"]:checked');
+            if (selectedDetail) formData.detail = selectedDetail.value;
+
+            generatePrompt();
+        }
+
+        function updateProjectType(type) {
+            formData.projectType = type;
+            
+            if (type !== 'custom' && presets[type]) {
+                const preset = presets[type];
+                document.getElementById('role').value = preset.role;
+                document.getElementById('specialties').value = preset.specialties;
+                document.getElementById('constraints').value = preset.constraints;
+                
+                formData.role = preset.role;
+                formData.specialties = preset.specialties;
+                formData.constraints = preset.constraints;
+            }
+            
+            generatePrompt();
+        }
+
+        function toggleMultiAgent() {
+            const isMultiAgent = document.getElementById('multiAgent').checked;
+            formData.multiAgent = isMultiAgent;
+            
+            document.getElementById('singleAgentMode').classList.toggle('hidden', isMultiAgent);
+            document.getElementById('multiAgentMode').classList.toggle('hidden', !isMultiAgent);
+            
+            generatePrompt();
+        }
+
+        function toggleAutonomousMode() {
+            const isAutonomous = document.getElementById('autonomousMode').checked;
+            formData.autonomousMode = isAutonomous;
+            
+            document.getElementById('teamLeaderSection').classList.toggle('hidden', !isAutonomous);
+            
+            if (!isAutonomous) {
+                formData.teamLeaderRole = '';
+                formData.teamLeaderName = '';
+                document.getElementById('teamLeaderRole').value = '';
+                document.getElementById('teamLeaderName').value = '';
+            }
+            
+            generatePrompt();
+        }
+
+        function toggleAutoDetect() {
+            const isAutoDetect = document.getElementById('autoDetectFormat').checked;
+            formData.autoDetectFormat = isAutoDetect;
+            
+            const manualSettings = document.getElementById('manualFormatSettings');
+            if (isAutoDetect) {
+                manualSettings.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                manualSettings.classList.remove('opacity-50', 'pointer-events-none');
+            }
+            
+            generatePrompt();
+        }
+
+        function showAgentSelector() {
+            const modal = document.getElementById('agentSelectorModal');
+            modal.classList.add('active');
+            populateAgentList();
+        }
+
+        function closeAgentSelector() {
+            const modal = document.getElementById('agentSelectorModal');
+            modal.classList.remove('active');
+        }
+
+        function populateAgentList(category = 'all', searchTerm = '') {
+            const agentList = document.getElementById('agentList');
+            const filteredAgents = allAgentTemplates.filter(agent => {
+                const matchesCategory = category === 'all' || agent.category === category;
+                const matchesSearch = searchTerm === '' || 
+                    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    agent.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    agent.specialties.toLowerCase().includes(searchTerm.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+
+            agentList.innerHTML = filteredAgents.map(agent => `
+                <div class="border border-gray-200 rounded-lg p-3 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
+                     onclick="selectAgent('${agent.name}')">
+                    <div class="font-medium text-sm mb-1">${agent.name}</div>
+                    <div class="text-xs text-gray-600 mb-1">${agent.role}</div>
+                    <div class="text-xs text-gray-500">${agent.specialties}</div>
+                    <div class="mt-2 inline-block px-2 py-1 bg-${getCategoryColor(agent.category)}-100 text-${getCategoryColor(agent.category)}-700 text-xs rounded">
+                        ${getCategoryLabel(agent.category)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                business: 'blue',
+                creative: 'purple',
+                technical: 'green',
+                research: 'yellow',
+                personal: 'indigo',
+                other: 'gray',
+                unique: 'pink'
+            };
+            return colors[category] || 'gray';
+        }
+
+        function getCategoryLabel(category) {
+            const labels = {
+                business: 'ビジネス',
+                creative: 'クリエイティブ',
+                technical: 'テクニカル',
+                research: '研究・分析',
+                personal: '個人・日常',
+                other: 'その他',
+                unique: '🌟 ユニーク'
+            };
+            return labels[category] || 'その他';
+        }
+
+        function filterByCategory(category) {
+            const buttons = document.querySelectorAll('.category-btn');
+            buttons.forEach(btn => {
+                btn.className = 'category-btn px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm';
+            });
+            event.target.className = 'category-btn px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm';
+            
+            const searchTerm = document.getElementById('agentSearchInput').value;
+            populateAgentList(category, searchTerm);
+        }
+
+        function filterAgents() {
+            const searchTerm = document.getElementById('agentSearchInput').value;
+            const activeCategory = document.querySelector('.category-btn.bg-blue-100')?.textContent;
+            let category = 'all';
+            
+            if (activeCategory === 'ビジネス') category = 'business';
+            else if (activeCategory === 'クリエイティブ') category = 'creative';
+            else if (activeCategory === 'テクニカル') category = 'technical';
+            else if (activeCategory === '研究・分析') category = 'research';
+            else if (activeCategory === '個人・日常') category = 'personal';
+            else if (activeCategory === 'その他') category = 'other';
+            else if (activeCategory === '🌟 ユニーク') category = 'unique';
+            
+            populateAgentList(category, searchTerm);
+        }
+
+        function selectAgent(agentName) {
+            const selectedAgent = allAgentTemplates.find(a => a.name === agentName);
+            if (selectedAgent) {
+                const newAgent = {
+                    id: agentIdCounter++,
+                    name: selectedAgent.name,
+                    role: selectedAgent.role,
+                    specialties: selectedAgent.specialties,
+                    persona: `${selectedAgent.name}として、${selectedAgent.specialties}に特化した専門的なサポートを提供します。`
+                };
+                
+                formData.agents.push(newAgent);
+                renderAgents();
+                generatePrompt();
+                closeAgentSelector();
+            }
+        }
+
+        function loadRecommendedTeam() {
+            const projectType = formData.projectType;
+            if (!projectType || projectType === 'custom') {
+                alert('プロジェクトタイプを選択してください');
+                return;
+            }
+
+            const recommended = recommendedTeams[projectType] || [];
+            formData.agents = [];
+            
+            recommended.forEach(agentName => {
+                const agent = allAgentTemplates.find(a => a.name === agentName);
+                if (agent) {
+                    formData.agents.push({
+                        id: agentIdCounter++,
+                        name: agent.name,
+                        role: agent.role,
+                        specialties: agent.specialties,
+                        persona: `${agent.name}として、${agent.specialties}に特化した専門的なサポートを提供します。`
+                    });
+                }
+            });
+            
+            renderAgents();
+            generatePrompt();
+        }
+
+        function addCustomAgent() {
+            const agent = {
+                id: agentIdCounter++,
+                name: '',
+                role: '',
+                specialties: '',
+                persona: ''
+            };
+            
+            formData.agents.push(agent);
+            renderAgents();
+            generatePrompt();
+        }
+
+        function updateAgent(id, field, value) {
+            const agent = formData.agents.find(a => a.id === id);
+            if (agent) {
+                agent[field] = value;
+                generatePrompt();
+            }
+        }
+
+        function removeAgent(id) {
+            formData.agents = formData.agents.filter(a => a.id !== id);
+            renderAgents();
+            generatePrompt();
+        }
+
+
+        function renderAgents() {
+            const container = document.getElementById('agentsList');
+            
+            if (formData.agents.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                        専門家を追加してチームを構成してください
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = formData.agents.map((agent, index) => `
+                <div class="border border-gray-200 rounded-lg p-3 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <div class="font-medium text-sm text-gray-700">専門家 ${index + 1}</div>
+                        <button onclick="removeAgent(${agent.id})" class="text-red-500 hover:text-red-700 text-xs">
+                            🗑️ 削除
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="text" value="${agent.name}" onchange="updateAgent(${agent.id}, 'name', this.value)" 
+                            class="p-2 border border-gray-300 rounded text-sm" placeholder="名前（例: UXデザイナー）">
+                        <input type="text" value="${agent.specialties}" onchange="updateAgent(${agent.id}, 'specialties', this.value)"
+                            class="p-2 border border-gray-300 rounded text-sm" placeholder="専門分野">
+                    </div>
+                    
+                    <textarea onchange="updateAgent(${agent.id}, 'role', this.value)" 
+                        class="w-full p-2 border border-gray-300 rounded text-sm" rows="2" 
+                        placeholder="役割・責任範囲の詳細説明">${agent.role}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const isActive = btn.getAttribute('data-tab') === tabName;
+                if (isActive) {
+                    btn.className = 'tab-btn flex items-center px-6 py-4 font-medium text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50';
+                } else {
+                    btn.className = 'tab-btn flex items-center px-6 py-4 font-medium text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50';
+                }
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Update preview tab if needed
+            if (tabName === 'preview') {
+                updatePreviewTab();
+            }
+        }
+
+        function updatePreviewTab() {
+            // Update setting summary
+            const projectTypes = {
+                business: 'ビジネス・業務効率化',
+                creative: 'クリエイティブ・コンテンツ',
+                technical: '技術・プログラミング',
+                research: '研究・学習',
+                personal: '個人・日常',
+                custom: 'カスタム'
+            };
+            
+            const tones = {
+                professional: 'プロフェッショナル',
+                friendly: 'フレンドリー',
+                expert: 'エキスパート',
+                supportive: 'サポーティブ'
+            };
+            
+            const details = {
+                concise: '簡潔',
+                balanced: 'バランス',
+                detailed: '詳細'
+            };
+            
+            document.getElementById('settingSummary').innerHTML = `
+                <div>
+                    <span class="text-gray-600">プロジェクト:</span>
+                    <span class="ml-2 font-medium">${formData.projectName || '未設定'}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">タイプ:</span>
+                    <span class="ml-2 font-medium">${projectTypes[formData.projectType] || '未選択'}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">トーン:</span>
+                    <span class="ml-2 font-medium">${tones[formData.tone]}</span>
+                </div>
+                <div>
+                    <span class="text-gray-600">詳細度:</span>
+                    <span class="ml-2 font-medium">${details[formData.detail]}</span>
+                </div>
+            `;
+            
+            // Update example
+            updateExample();
+            
+            // Update improvements
+            updateImprovements();
+        }
+
+        function updateExample() {
+            const questions = {
+                business: '来四半期のマーケティング戦略について相談したいのですが、まず何から始めるべきでしょうか？',
+                creative: 'ブランドの新しいキャッチコピーを考えたいのですが、どのようなアプローチが効果的でしょうか？',
+                technical: 'Webアプリケーションのパフォーマンス改善について教えてください。',
+                research: '市場調査のデータ分析において、どのような統計手法を使うべきか教えてください。',
+                personal: '来年の目標設定について、効果的な方法を教えてください。',
+                custom: 'このプロジェクトに関して、どのような支援ができますか？'
+            };
+            
+            const responses = {
+                business: {
+                    professional: {
+                        concise: '戦略策定には市場分析、競合調査、目標設定の3ステップが重要です。まず現状の市場ポジションを把握することから始めましょう。',
+                        balanced: '戦略策定の第一歩として、現在の市場ポジションと競合状況の分析をお勧めします。具体的には、既存顧客の分析、競合他社との差別化要因の特定、市場トレンドの調査を行い、その上で具体的な目標設定を進めていきましょう。',
+                        detailed: '包括的なマーケティング戦略を策定するため、以下の段階的アプローチをご提案します。\n\n**第1段階: 現状分析**\n- 既存顧客セグメントの詳細分析\n- 売上データと顧客行動の相関分析\n- 競合他社のマーケティング施策調査\n\n**第2段階: 戦略方向性の決定**\n- SWOT分析による強み・弱みの整理\n- ターゲット市場の再定義\n- 差別化戦略の策定'
+                    }
+                }
+            };
+            
+            document.getElementById('exampleQuestion').textContent = questions[formData.projectType] || questions.custom;
+            document.getElementById('exampleRole').textContent = formData.role || 'アシスタント';
+            
+            const projectResponses = responses[formData.projectType] || responses.business;
+            const toneResponses = projectResponses[formData.tone] || projectResponses.professional;
+            const response = toneResponses[formData.detail] || toneResponses.balanced;
+            
+            document.getElementById('exampleResponse').textContent = response;
+        }
+
+        function updateImprovements() {
+            const improvements = [];
+            
+            if (!formData.specialties) {
+                improvements.push('専門分野を追加すると、より具体的な支援が可能になります');
+            }
+            
+            if (!formData.constraints) {
+                improvements.push('制約事項を設定すると、適切な回答範囲を明確にできます');
+            }
+            
+            if (formData.projectType === 'creative' && !formData.customizations.includes('Artifact')) {
+                improvements.push('クリエイティブプロジェクトでは「Artifact機能の活用」を追加すると効果的です');
+            }
+            
+            if (formData.tone === 'professional' && formData.projectType === 'personal') {
+                improvements.push('個人用途では「フレンドリー」トーンの方が使いやすい場合があります');
+            }
+            
+            const container = document.getElementById('improvements');
+            if (improvements.length === 0) {
+                container.innerHTML = '<div class="text-sm text-green-600">✅ 設定は十分に充実しています！</div>';
+            } else {
+                container.innerHTML = improvements.map(imp => `
+                    <div class="flex items-start space-x-2">
+                        <div class="w-1.5 h-1.5 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div class="text-sm text-green-700">${imp}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function getLeaderRoleLabel(role) {
+            const labels = {
+                coo: 'COO (最高執行責任者)',
+                projectManager: 'プロジェクトマネージャー',
+                teamLead: 'チームリーダー',
+                facilitator: 'ファシリテーター',
+                coordinator: 'コーディネーター'
+            };
+            return labels[role] || role;
+        }
+
+        function getDocumentTypeLabel(type) {
+            const labels = {
+                standard: '標準テキスト',
+                report: '分析レポート',
+                presentation: 'プレゼンテーション形式',
+                technical: '技術文書',
+                creative: 'クリエイティブ文書'
+            };
+            return labels[type] || type;
+        }
+
+        function getDocumentTypeDescription(type) {
+            const descriptions = {
+                standard: '通常のテキストベースの回答形式',
+                report: '要約・分析・結論を含む構造的なレポート形式',
+                presentation: 'スライド風の視覚的でわかりやすい形式',
+                technical: '詳細な技術仕様と実装手順を含む形式',
+                creative: 'ストーリーテリングや創造的な表現を重視した形式'
+            };
+            return descriptions[type] || '';
+        }
+
+        function getStructureLevelLabel(level) {
+            const labels = {
+                simple: 'シンプル',
+                moderate: '標準',
+                detailed: '詳細',
+                academic: '学術的'
+            };
+            return labels[level] || level;
+        }
+
+        function getStructureLevelDescription(level) {
+            const descriptions = {
+                simple: '見出しのみのシンプルな構成',
+                moderate: '見出しと箇条書きを使った標準的な構成',
+                detailed: '章立てとセクションによる詳細な構成',
+                academic: '目次、参考文献、脚注を含む学術的な構成'
+            };
+            return descriptions[level] || '';
+        }
+
+        function getTargetAudienceLabel(audience) {
+            const labels = {
+                general: '一般向け',
+                professional: '専門家向け',
+                executive: '経営層向け',
+                technical: '技術者向け',
+                beginner: '初心者向け'
+            };
+            return labels[audience] || audience;
+        }
+
+        function getTargetAudienceDescription(audience) {
+            const descriptions = {
+                general: '専門知識を前提としない、誰でも理解できる説明',
+                professional: '業界知識を持つ専門家向けの詳細な内容',
+                executive: '意思決定に必要な要点を簡潔にまとめた内容',
+                technical: '技術的な詳細と実装方法を含む内容',
+                beginner: '基礎から丁寧に説明する初心者向けの内容'
+            };
+            return descriptions[audience] || '';
+        }
+
+        function generatePrompt() {
+            const projectTypeDescriptions = {
+                business: 'ビジネス効率化と成果創出に特化し、戦略的思考と実行力を重視します。',
+                creative: 'クリエイティブな発想と表現力を重視し、独創的なアイデアと魅力的なコンテンツ制作をサポートします。',
+                technical: '技術的な正確性と実装可能性を重視し、最新のベストプラクティスに基づいた解決策を提供します。',
+                research: '客観的な分析と信頼性の高い情報収集を重視し、学術的な厳密性を保ちます。',
+                personal: '個人のニーズと価値観を尊重し、実現可能で持続可能な改善をサポートします。',
+                custom: '特定の要件に基づいた専門的なサポートを提供します。'
+            };
+
+            const toneDescriptions = {
+                professional: 'フォーマルで専門的、ビジネスシーンに適した丁寧な表現',
+                friendly: 'カジュアルで親しみやすく、気軽に相談できる雰囲気',
+                expert: '高度に専門的で詳細、技術的な深い議論に対応',
+                supportive: '励ましと支援を重視した、温かみのある表現'
+            };
+
+            const detailDescriptions = {
+                concise: '要点を簡潔にまとめた効率的な回答',
+                balanced: '適度な詳細度で、理解しやすく実用的な回答',
+                detailed: '包括的で詳細な説明、背景情報も含む充実した回答'
+            };
+
+            let prompt = '';
+
+            if (formData.multiAgent && formData.agents.length > 0) {
+                prompt = `# ${formData.projectName || '[プロジェクト名]'} - AI基本指示（マルチエージェント）
+
+## 概要・目的
+「${formData.projectName || '[プロジェクト名]'}」において、以下の専門家チームとして協働し、高品質なアウトプットを提供します。
+${projectTypeDescriptions[formData.projectType] || ''}
+
+## 専門家チーム構成
+
+${formData.agents.map((agent, index) => `### ${index + 1}. ${agent.name || `専門家${index + 1}`}
+**役割**: ${agent.role || '専門的なサポートを提供'}
+**専門分野**: ${agent.specialties || '未定義'}
+**アプローチ**: ${toneDescriptions[formData.tone]}で${detailDescriptions[formData.detail]}
+
+`).join('')}
+
+## チーム協働ルール
+
+${formData.autonomousMode && formData.teamLeaderName ? `### 🎯 チームリーダー: ${formData.teamLeaderName}
+**役職**: ${getLeaderRoleLabel(formData.teamLeaderRole)}
+**責任範囲**:
+- チーム全体の進行管理と調整
+- タスクの優先順位付けと割り振り
+- 専門家間の連携促進
+- ボスへの定期報告と重要事項の相談
+
+` : ''}### 基本原則
+1. **役割分担の明確化**: 各タスクに最適な専門家が主担当となる
+2. **効率的な対応**: 関連する専門家のみが初期対応を行う
+3. **必要最小限の関与**: 全員が毎回参加する必要はない
+4. **専門性の尊重**: 各専門家の領域での判断を重視
+
+${formData.autonomousMode ? `### 🚀 自律チーム運営モード
+- **チームリーダーの権限**: 
+  - 日常的なタスクの割り振りと進行管理
+  - チーム内の議論のファシリテーション
+  - 軽微な決定の承認（ボスへの事後報告）
+  
+- **ボスへの報告タイミング**:
+  - 重要な意思決定が必要な場合
+  - プロジェクトの大きな方向転換
+  - リソースの追加が必要な場合
+  - 定期的な進捗報告（週次/月次）
+  
+- **自律的な運営フロー**:
+  1. タスク受領 → チームリーダーが初期評価
+  2. 適切な専門家への割り振り
+  3. チーム内での協働と進行
+  4. 成果物のレビューと品質管理
+  5. ボスへの報告（重要事項のみ）` : formData.requireApproval ? `### 承認制協働モード
+- **主担当の自律的対応**: タスクに直接関連する専門家は、承認なしで対応可能
+- **他専門家の参加**: 主担当以外が議論に参加したい場合は、以下の形式でユーザー（ボス）に承認を求める：
+  
+  💬 「[専門家名]として、この議論に〇〇の観点から貢献できそうです。参加してもよろしいでしょうか？」
+  
+- **ユーザーの判断**: ユーザーは必要に応じて参加を承認または却下
+- **緊急時の例外**: セキュリティや重大なリスクに関わる場合は、承認なしで介入可能` : `### 自律的協働モード
+- 各専門家は自身の判断で必要に応じて議論に参加
+- 効率性を重視し、過度な介入は避ける`}
+
+## 対応フロー
+
+1. **タスク受領時の判断**
+   - 各専門家が自身の関連度を評価（高/中/低）
+   - 関連度「高」の専門家が主担当として対応開始
+   
+2. **初期対応**
+   - 主担当が中心となって回答・提案を作成
+   - 必要に応じて関連度「中」の専門家が補足
+   
+3. **協働の判断**
+   ${formData.requireApproval ? 
+   `- 関連度「低」の専門家が参加希望の場合、ユーザーに承認を要請
+   - ユーザーの承認後、該当専門家が貢献` : 
+   `- 各専門家が自律的に参加の必要性を判断
+   - 過度な介入を避け、効率的な協働を実現`}
+
+4. **最終アウトプット**
+   - 主担当が全体を取りまとめ
+   - 参加した専門家の貢献を明示
+
+## 応答スタイル
+- **言語**: ${formData.language === 'japanese' ? '日本語（特別な指定がない限り）' : '英語'}
+- **構造**: 誰が対応しているか明確に示す（例：【マーケティング担当より】）
+- **効率性**: 冗長な説明を避け、各専門家の核心的な貢献に集中
+
+${formData.constraints ? `## 制約事項・注意点
+${formData.constraints.split(',').map(constraint => `- ${constraint.trim()}`).join('\n')}` : ''}
+
+## 品質チェックポイント
+- [ ] タスクに最適な専門家が主担当になっているか
+- [ ] 不必要な専門家の介入がないか
+- [ ] ${formData.autonomousMode ? 'チームリーダーが適切に機能しているか' : formData.requireApproval ? '承認プロセスが適切に機能しているか' : '自律的判断が適切に行われているか'}
+- [ ] ${formData.autonomousMode ? 'ボスへの報告が適切なタイミングで行われているか' : 'アウトプットが簡潔で実用的か'}
+
+${formData.customizations ? `## カスタム設定
+${formData.customizations}` : ''}
+
+---
+💡 **使用例**: 
+- 「マーケティング戦略について」→ マーケティング担当が主導
+- 「全体的な意見が欲しい」→ 複数の専門家が協働
+- 特定指名：「エンジニアの視点で」→ 指定された専門家が対応`;
+            } else {
+                prompt = `# ${formData.projectName || '[プロジェクト名]'} - AI基本指示
+
+## 役割・目的
+あなたは「${formData.projectName || '[プロジェクト名]'}」における${formData.role || '[役割]'}です。
+${projectTypeDescriptions[formData.projectType] || ''}
+
+## 核となる原則
+1. **品質重視**: 正確性と有用性を最優先する
+2. **効率性**: 明確で実行可能な回答を提供する
+3. **一貫性**: プロジェクト全体を通じて統一されたアプローチを維持する
+4. **協働性**: ユーザーの目標達成をサポートする
+
+## 応答スタイル
+- **トーン**: ${toneDescriptions[formData.tone]}
+- **詳細度**: ${detailDescriptions[formData.detail]}
+- **言語**: ${formData.language === 'japanese' ? '日本語（特別な指定がない限り）' : '英語'}
+- **構造**: 論理的で分かりやすい構成を心がける
+
+${formData.specialties ? `## 専門分野・得意領域
+${formData.specialties.split(',').map(specialty => `- ${specialty.trim()}`).join('\n')}` : ''}
+
+## 出力形式のガイドライン
+
+${formData.autoDetectFormat ? `### 🤖 自動判断モード
+タスクの内容に応じて、最適な出力形式を自動的に選択します。
+
+**タスクタイプ別の推奨形式:**
+- **タスク管理・TODO**: シンプルなリスト形式（番号付き/チェックボックス）
+- **分析・調査依頼**: 構造化されたレポート形式
+- **アイデア出し**: ブレインストーミング形式（マインドマップ風）
+- **コード生成**: 技術文書＋実装コード
+- **説明・解説**: 段階的な説明with図解
+- **プレゼン作成**: スライド風の視覚的構成
+- **質問への回答**: タスクの性質に最適な形式
+
+**ドキュメントタイプ別カスタマイズ設定:**
+${Object.entries(formData.documentTypeSettings).map(([type, settings]) => {
+    const visuals = [];
+    if (settings.useVisuals) visuals.push('図表');
+    if (settings.useIllustrations) visuals.push('イラスト');
+    if (settings.useDiagrams) visuals.push('図解');
+    if (settings.useEmojis) visuals.push('絵文字');
+    
+    const visualsText = visuals.length > 0 ? visuals.join('・') : 'テキストのみ';
+    
+    const structureLabels = {
+        simple: 'シンプル',
+        moderate: '標準',
+        detailed: '詳細',
+        academic: '学術的'
+    };
+    
+    const docTypeLabels = {
+        standard: '標準テキスト',
+        report: '分析レポート',
+        presentation: 'プレゼンテーション',
+        technical: '技術文書',
+        creative: 'クリエイティブ文書'
+    };
+    
+    return `- **${docTypeLabels[type]}**: ${visualsText} | ${structureLabels[settings.structureLevel]}構成`;
+}).join('\n')}
+
+**適用ルール:**
+1. タスクの内容を分析し、最も適切なドキュメントタイプを判断
+2. 選択したドキュメントタイプの設定に従って出力を構成
+3. ユーザーが明示的に形式を指定した場合は、その指示を優先
+4. タスクに応じて複数のドキュメントタイプを組み合わせることも可能` : `### 固定形式モード`}
+
+### ドキュメントタイプ: ${getDocumentTypeLabel(formData.documentType)}
+${getDocumentTypeDescription(formData.documentType)}
+
+### ビジュアル要素
+${formData.useVisuals || formData.useIllustrations || formData.useDiagrams || formData.useEmojis ? 
+`以下の要素を積極的に活用してください：
+${formData.useVisuals ? '- 📊 **図表・グラフ**: データの視覚化、比較表、統計グラフ\n' : ''}${formData.useIllustrations ? '- 🎨 **イラスト・画像**: 概念図、説明画像、アイコン\n' : ''}${formData.useDiagrams ? '- 🔄 **フローチャート・図解**: プロセス図、関係図、システム構成図\n' : ''}${formData.useEmojis ? '- 😊 **絵文字**: ポイントの強調、親しみやすさの演出\n' : ''}` : 
+'テキスト中心のシンプルな構成で提供します。'}
+
+### 構造化レベル: ${getStructureLevelLabel(formData.structureLevel)}
+${getStructureLevelDescription(formData.structureLevel)}
+
+### ターゲット読者: ${getTargetAudienceLabel(formData.targetAudience)}
+${getTargetAudienceDescription(formData.targetAudience)}
+
+${formData.outputFormatInstructions ? `### 追加の出力形式指示
+${formData.outputFormatInstructions}
+` : ''}${formData.autoDetectFormat ? `### 柔軟性の原則
+- ユーザーが明示的に出力形式を指定した場合は、その指示を最優先
+- タスクの性質と上記のデフォルト設定が大きく異なる場合は、タスクに最適な形式を選択
+- 常に「理解しやすさ」と「実用性」を重視` : ''}
+
+### 具体的な出力指針
+1. **視覚的理解の促進**: ${formData.useVisuals || formData.useIllustrations || formData.useDiagrams ? '図解を多用し、一目で理解できる構成' : 'テキストの論理的な流れで理解を促進'}
+2. **情報の階層化**: ${formData.structureLevel === 'detailed' || formData.structureLevel === 'academic' ? '明確な章立てとセクション分け' : 'シンプルな見出し構成'}
+3. **専門性の調整**: ${formData.targetAudience === 'professional' || formData.targetAudience === 'technical' ? '専門用語を適切に使用' : '平易な表現で説明'}
+4. **エンゲージメント**: ${formData.useEmojis ? '絵文字で親しみやすく' : 'プロフェッショナルな印象を維持'}
+
+${formData.constraints ? `## 制約事項・注意点
+${formData.constraints.split(',').map(constraint => `- ${constraint.trim()}`).join('\n')}` : ''}
+
+## 品質チェックポイント
+各回答前に以下を確認：
+- [ ] 質問の意図を正しく理解しているか
+- [ ] 回答は具体的で実行可能か
+- [ ] プロジェクトの文脈に適合しているか
+- [ ] 必要な情報は網羅されているか
+
+## 継続的改善
+- ユーザーからのフィードバックを積極的に求める
+- プロジェクトの進展に応じて指示の調整を提案
+- 効率化のための改善案を随時提示
+
+${formData.customizations ? `## カスタム設定
+${formData.customizations}` : ''}`;
+            }
+
+            document.getElementById('generatedPrompt').textContent = prompt;
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('generatedPrompt').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '✅ コピー完了！';
+                btn.className = 'flex items-center px-4 py-2 rounded-lg transition-all duration-200 bg-green-100 text-green-700 border border-green-200';
+                
+                setTimeout(() => {
+                    btn.innerHTML = '📋 コピー';
+                    btn.className = 'flex items-center px-4 py-2 rounded-lg transition-all duration-200 bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-200';
+                }, 2000);
+            });
+        }
+
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('active');
+            document.getElementById('importText').value = '';
+        }
+
+        function executeImport() {
+            const text = document.getElementById('importText').value;
+            
+            try {
+                // Parse project name
+                const titleMatch = text.match(/^#\s*(.+?)\s*-\s*(Claude|AI)基本指示/m);
+                if (titleMatch) {
+                    formData.projectName = titleMatch[1].trim();
+                    document.getElementById('projectName').value = formData.projectName;
+                }
+                
+                // Parse role
+                const roleMatch = text.match(/あなたは「.*?」における(.+?)です。/s);
+                if (roleMatch) {
+                    formData.role = roleMatch[1].trim();
+                    document.getElementById('role').value = formData.role;
+                }
+                
+                // Parse specialties
+                const specialtySection = text.match(/## 専門分野・得意領域\n((?:- .+(?:\n|$))+)/);
+                if (specialtySection) {
+                    const specialties = specialtySection[1]
+                        .split('\n')
+                        .filter(line => line.trim().startsWith('- '))
+                        .map(line => line.replace(/^- /, '').trim())
+                        .filter(line => line.length > 0)
+                        .join(', ');
+                    formData.specialties = specialties;
+                    document.getElementById('specialties').value = specialties;
+                }
+                
+                // Parse constraints
+                const constraintSection = text.match(/## 制約事項・注意点\n((?:- .+(?:\n|$))+)/);
+                if (constraintSection) {
+                    const constraints = constraintSection[1]
+                        .split('\n')
+                        .filter(line => line.trim().startsWith('- '))
+                        .map(line => line.replace(/^- /, '').trim())
+                        .filter(line => line.length > 0)
+                        .join(', ');
+                    formData.constraints = constraints;
+                    document.getElementById('constraints').value = constraints;
+                }
+                
+                // Parse customizations
+                const customSection = text.match(/## カスタム設定\n([\s\S]+?)(?=\n## |$)/);
+                if (customSection) {
+                    formData.customizations = customSection[1].trim();
+                    document.getElementById('customizations').value = formData.customizations;
+                }
+                
+                generatePrompt();
+                closeImportModal();
+                alert('✅ インポートが完了しました！設定を確認して必要に応じて調整してください。');
+                
+            } catch (error) {
+                alert('❌ インポートに失敗しました。基本指示の形式を確認してください。');
+            }
+        }
+
+        function copyAsText() {
+            const prompt = document.getElementById('generatedPrompt').textContent;
+            document.getElementById('exportContent').value = prompt;
+            document.getElementById('exportType').textContent = 'テキスト形式';
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function copyAsJSON() {
+            const config = {
+                project: formData,
+                instructions: document.getElementById('generatedPrompt').textContent,
+                generated_at: new Date().toISOString(),
+                metadata: {
+                    version: '1.0',
+                    created_with: 'Claude Project Builder',
+                    project_type: formData.projectType,
+                    multi_agent: formData.multiAgent,
+                    agents_count: formData.agents.length
+                }
+            };
+            
+            document.getElementById('exportContent').value = JSON.stringify(config, null, 2);
+            document.getElementById('exportType').textContent = 'JSON形式';
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function copyExportContent() {
+            const text = document.getElementById('exportContent').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ クリップボードにコピーしました！');
+                closeExportModal();
+            });
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+            document.getElementById('exportContent').value = '';
+        }
+
+        // Document Settings Modal Functions
+        function openDocumentSettings(docType) {
+            currentDocumentType = docType;
+            const modal = document.getElementById('documentSettingsModal');
+            const titleSpan = document.getElementById('documentSettingsTitle');
+            
+            // Set title
+            const titles = {
+                standard: '標準テキスト',
+                report: '分析レポート',
+                presentation: 'プレゼンテーション',
+                technical: '技術文書',
+                creative: 'クリエイティブ文書'
+            };
+            titleSpan.textContent = titles[docType] || docType;
+            
+            // Load current settings for this document type
+            const settings = formData.documentTypeSettings[docType];
+            if (settings) {
+                document.getElementById('docUseVisuals').checked = settings.useVisuals || false;
+                document.getElementById('docUseIllustrations').checked = settings.useIllustrations || false;
+                document.getElementById('docUseDiagrams').checked = settings.useDiagrams || false;
+                document.getElementById('docUseEmojis').checked = settings.useEmojis || false;
+                document.getElementById('docStructureLevel').value = settings.structureLevel || 'moderate';
+            }
+            
+            modal.classList.add('active');
+        }
+
+        function closeDocumentSettings() {
+            const modal = document.getElementById('documentSettingsModal');
+            modal.classList.remove('active');
+            currentDocumentType = null;
+        }
+
+        function saveDocumentSettings() {
+            if (!currentDocumentType) return;
+            
+            // Save settings to formData
+            formData.documentTypeSettings[currentDocumentType] = {
+                useVisuals: document.getElementById('docUseVisuals').checked,
+                useIllustrations: document.getElementById('docUseIllustrations').checked,
+                useDiagrams: document.getElementById('docUseDiagrams').checked,
+                useEmojis: document.getElementById('docUseEmojis').checked,
+                structureLevel: document.getElementById('docStructureLevel').value
+            };
+            
+            // Update the summary display
+            updateDocumentTypeSummary(currentDocumentType);
+            
+            // Generate new prompt
+            generatePrompt();
+            
+            // Close modal
+            closeDocumentSettings();
+        }
+
+        function updateDocumentTypeSummary(docType) {
+            const settings = formData.documentTypeSettings[docType];
+            const summaryEl = document.getElementById(`${docType}-summary`);
+            
+            if (!summaryEl || !settings) return;
+            
+            // Create summary text
+            const visuals = [];
+            if (settings.useVisuals) visuals.push('図表');
+            if (settings.useIllustrations) visuals.push('イラスト');
+            if (settings.useDiagrams) visuals.push('図解');
+            if (settings.useEmojis) visuals.push('絵文字');
+            
+            const structureLabels = {
+                simple: 'シンプル',
+                moderate: '標準',
+                detailed: '詳細',
+                academic: '学術的'
+            };
+            
+            const visualsText = visuals.length > 0 ? visuals.join('・') : 'なし';
+            const structureText = structureLabels[settings.structureLevel] || settings.structureLevel;
+            
+            summaryEl.textContent = `${visualsText} | ${structureText}構成`;
+        }
+
+        // Initialize document type summaries on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const docTypes = ['standard', 'report', 'presentation', 'technical', 'creative'];
+            docTypes.forEach(docType => {
+                updateDocumentTypeSummary(docType);
+            });
+        });
+    </script>
+</body>
+</html>
