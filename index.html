@@ -1562,16 +1562,10 @@ ${formData.customizations}` : ''}`;
 ${aiSettings.features.map(feature => `- ${feature}`).join('\n')}`;
             }
             
-            // Apply length restrictions for ChatGPT
+            // Apply length restrictions for ChatGPT - but only show warning, don't truncate
             if (formData.targetAI === 'chatgpt' && aiSettings.maxLength && prompt.length > aiSettings.maxLength) {
-                // Truncate and optimize for ChatGPT's character limit
-                const essentialParts = prompt.split('\n\n').filter(section => 
-                    section.includes('## 概要') || 
-                    section.includes('## 役割') || 
-                    section.includes('## 応答スタイル') ||
-                    section.includes('固有の機能')
-                );
-                prompt = essentialParts.join('\n\n').substring(0, aiSettings.maxLength - 100) + '\n\n*[文字数制限により一部省略]*';
+                // Add warning about character limit without truncating
+                prompt += `\n\n⚠️ 注意: この指示書は${prompt.length}文字で、ChatGPTのCustom Instructions制限（${aiSettings.maxLength}文字）を超えています。必要に応じて重要な部分のみを選択してコピーしてください。`;
             }
             
             // Add AI-specific formatting hints
