@@ -1274,6 +1274,44 @@
         }
 
         function generatePrompt() {
+            // AI-specific prompt customizations
+            const aiSpecificSettings = {
+                claude: {
+                    prefix: '# Claude Project Instructions\n\n',
+                    features: [
+                        'Artifactを活用して、コード、文書、図表などを作成・編集できます。',
+                        'XMLタグを使用して構造化された出力を提供します。',
+                        '長文の分析や複雑な推論タスクに特に強みがあります。'
+                    ],
+                    format: 'xml'
+                },
+                chatgpt: {
+                    prefix: '# Custom Instructions\n\n',
+                    features: [
+                        'Web検索やDALL-E、Code Interpreterなどのツールを活用します。',
+                        '簡潔で実用的な回答を心がけます。',
+                        'マークダウン形式で構造化された出力を提供します。'
+                    ],
+                    format: 'markdown',
+                    maxLength: 1500 // ChatGPT has character limit
+                },
+                gemini: {
+                    prefix: '# System Instructions\n\n',
+                    features: [
+                        'Google製品との連携を考慮した提案を行います。',
+                        '最新の情報とマルチモーダル機能を活用します。',
+                        '会話的で親しみやすいトーンを保ちます。'
+                    ],
+                    format: 'markdown'
+                },
+                universal: {
+                    prefix: '# AI基本指示\n\n',
+                    features: [],
+                    format: 'standard'
+                }
+            };
+
+            const aiSettings = aiSpecificSettings[formData.targetAI] || aiSpecificSettings.universal;
             const projectTypeDescriptions = {
                 business: 'ビジネス効率化と成果創出に特化し、戦略的思考と実行力を重視します。',
                 creative: 'クリエイティブな発想と表現力を重視し、独創的なアイデアと魅力的なコンテンツ制作をサポートします。',
@@ -1296,10 +1334,10 @@
                 detailed: '包括的で詳細な説明、背景情報も含む充実した回答'
             };
 
-            let prompt = '';
+            let prompt = aiSettings.prefix;
 
             if (formData.multiAgent && formData.agents.length > 0) {
-                prompt = `# ${formData.projectName || '[プロジェクト名]'} - AI基本指示（マルチエージェント）
+                prompt += `## ${formData.projectName || '[プロジェクト名]'} - マルチエージェント設定
 
 ## 概要・目的
 「${formData.projectName || '[プロジェクト名]'}」において、以下の専門家チームとして協働し、高品質なアウトプットを提供します。
@@ -1402,7 +1440,7 @@ ${formData.customizations}` : ''}
 - 「全体的な意見が欲しい」→ 複数の専門家が協働
 - 特定指名：「エンジニアの視点で」→ 指定された専門家が対応`;
             } else {
-                prompt = `# ${formData.projectName || '[プロジェクト名]'} - AI基本指示
+                prompt += `## ${formData.projectName || '[プロジェクト名]'}
 
 ## 役割・目的
 あなたは「${formData.projectName || '[プロジェクト名]'}」における${formData.role || '[役割]'}です。
@@ -1516,6 +1554,29 @@ ${formData.constraints.split(',').map(constraint => `- ${constraint.trim()}`).jo
 
 ${formData.customizations ? `## カスタム設定
 ${formData.customizations}` : ''}`;
+            }
+            
+            // Add AI-specific features and formatting
+            if (aiSettings.features.length > 0) {
+                prompt += `\n\n## ${formData.targetAI === 'claude' ? 'Claude' : formData.targetAI === 'chatgpt' ? 'ChatGPT' : formData.targetAI === 'gemini' ? 'Gemini' : 'AI'}固有の機能
+${aiSettings.features.map(feature => `- ${feature}`).join('\n')}`;
+            }
+            
+            // Apply length restrictions for ChatGPT
+            if (formData.targetAI === 'chatgpt' && aiSettings.maxLength && prompt.length > aiSettings.maxLength) {
+                // Truncate and optimize for ChatGPT's character limit
+                const essentialParts = prompt.split('\n\n').filter(section => 
+                    section.includes('## 概要') || 
+                    section.includes('## 役割') || 
+                    section.includes('## 応答スタイル') ||
+                    section.includes('固有の機能')
+                );
+                prompt = essentialParts.join('\n\n').substring(0, aiSettings.maxLength - 100) + '\n\n*[文字数制限により一部省略]*';
+            }
+            
+            // Add AI-specific formatting hints
+            if (formData.targetAI === 'claude' && aiSettings.format === 'xml') {
+                prompt = prompt.replace(/^##/gm, '<section>').replace(/$/gm, '</section>');
             }
 
             document.getElementById('generatedPrompt').textContent = prompt;
