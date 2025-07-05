@@ -53,17 +53,6 @@
                             <input type="text" id="projectName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="例: マーケティング戦略策定">
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">対象AIツール</label>
-                            <select id="targetAI" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="updateFormData()">
-                                <option value="universal">汎用（すべてのAIで使用可能）</option>
-                                <option value="claude">Claude</option>
-                                <option value="chatgpt">ChatGPT</option>
-                                <option value="gemini">Gemini</option>
-                                <option value="other">その他のAI</option>
-                            </select>
-                            <div class="mt-1 text-xs text-gray-500">基本的に「汎用」で問題ありません。特定のAI向けに最適化したい場合のみ選択してください。</div>
-                        </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクトタイプ *</label>
@@ -429,7 +418,7 @@
                                     </div>
                                     <div class="space-y-1">
                                         <div class="font-medium">💬 ChatGPT の場合:</div>
-                                        <div class="pl-3">「Custom Instructions」の「How would you like ChatGPT to respond?」欄に貼り付け</div>
+                                        <div class="pl-3">プロジェクトの「Instructions」に貼り付け（GPTsを作成する場合）、または会話の最初に送信</div>
                                     </div>
                                     <div class="space-y-1">
                                         <div class="font-medium">✨ Gemini の場合:</div>
@@ -583,7 +572,6 @@
         // State management
         let formData = {
             projectName: '',
-            targetAI: 'universal',
             projectType: '',
             role: '',
             tone: 'professional',
@@ -781,7 +769,6 @@
 
         function updateFormData() {
             formData.projectName = document.getElementById('projectName').value;
-            formData.targetAI = document.getElementById('targetAI')?.value || 'universal';
             formData.role = document.getElementById('role').value;
             formData.specialties = document.getElementById('specialties').value;
             formData.constraints = document.getElementById('constraints').value;
