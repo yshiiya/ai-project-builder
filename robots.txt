@@ -1,0 +1,4 @@
+# AI Project Builder - robots.txt
+User-agent: *
+Allow: /
+Sitemap: https://yshiiya.github.io/ai-project-builder/sitemap.xml

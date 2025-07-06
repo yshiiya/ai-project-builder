@@ -1,6 +1,10 @@
 # AI Project 基本指示ビルダー
 
+[![Deploy to GitHub Pages](https://github.com/yshiiya/ai-project-builder/actions/workflows/deploy.yml/badge.svg)](https://github.com/yshiiya/ai-project-builder/actions/workflows/deploy.yml)
+
 Claude、ChatGPT、Gemini等、あらゆるAIツールで使える指示書を簡単に作成できるツールです。
+
+🌐 **[ライブデモはこちら](https://yshiiya.github.io/ai-project-builder/)**
 
 ## 🌟 特徴
 
@@ -54,6 +58,42 @@ Claude、ChatGPT、Gemini等、あらゆるAIツールで使える指示書を�
 - **技術**: プログラミング、システム設計、技術調査
 - **研究**: 文献調査、データ分析、レポート作成
 - **個人・日常**: 家計相談、教育相談、健康管理、ライフプランニング
+
+## 🚀 デプロイ方法
+
+### GitHub Pages
+
+1. リポジトリの Settings > Pages に移動
+2. Source を "Deploy from a branch" に設定
+3. Branch を "main" / "(root)" に設定
+4. Save をクリック
+
+### Netlify
+
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yshiiya/ai-project-builder)
+
+### Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yshiiya/ai-project-builder)
+
+### その他のホスティング
+
+`index.html`を任意のWebサーバーにアップロードするだけで動作します。
+
+## 🛠️ ローカル開発
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/yshiiya/ai-project-builder.git
+cd ai-project-builder
+
+# ブラウザで開く
+open index.html
+
+# または、簡易サーバーを起動
+python -m http.server 8000
+# http://localhost:8000 にアクセス
+```
 
 ## 📝 ライセンス
 

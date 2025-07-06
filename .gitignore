@@ -51,3 +51,21 @@ build/
 
 # Vercel
 .vercel
+
+# Backup files
+*.backup
+*.backup.*
+*.bak
+
+# Archive folder
+archive/
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
+temp/

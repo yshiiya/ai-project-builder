@@ -1,0 +1,4 @@
+Contact: https://github.com/yshiiya/ai-project-builder/security/advisories/new
+Expires: 2025-07-06T00:00:00.000Z
+Preferred-Languages: ja, en
+Canonical: https://yshiiya.github.io/ai-project-builder/.well-known/security.txt

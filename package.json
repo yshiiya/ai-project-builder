@@ -1,0 +1,35 @@
+{
+  "name": "ai-project-builder",
+  "version": "1.0.0",
+  "description": "Claude、ChatGPT、Gemini等、あらゆるAIツールで使える指示書を簡単に作成できるツールです。",
+  "main": "index.js",
+  "scripts": {
+    "serve": "npx http-server . -p 8080 -o",
+    "validate": "npx html-validate index.html",
+    "format": "npx prettier --write index.html",
+    "deploy:netlify": "npx netlify-cli deploy --dir=. --prod",
+    "deploy:vercel": "npx vercel --prod",
+    "deploy:surge": "npx surge . ai-project-builder.surge.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yshiiya/ai-project-builder.git"
+  },
+  "keywords": [
+    "ai",
+    "claude",
+    "chatgpt",
+    "gemini",
+    "prompt",
+    "builder",
+    "multi-agent",
+    "japanese"
+  ],
+  "author": "yshiiya",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yshiiya/ai-project-builder/issues"
+  },
+  "homepage": "https://ai-project-builder.ideandtity.com/"
+}
