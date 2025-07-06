@@ -1,0 +1,11 @@
+# Code Owners
+# このファイルは重要なファイルの変更を保護します
+
+# 全体のオーナー
+* @yshiiya
+
+# 重要なファイルの保護
+/index.html @yshiiya
+/landing.html @yshiiya
+/vercel.json @yshiiya
+/.github/ @yshiiya

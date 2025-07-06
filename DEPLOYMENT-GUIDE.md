@@ -72,11 +72,26 @@ GitHubリポジトリの Settings > Secrets and variables > Actions で以下を
 ### カスタムドメインに古いバージョンが表示される場合
 
 1. Vercelダッシュボードで最新デプロイを確認
-2. 必要に応じて手動でエイリアスを更新：
+2. 手動でエイリアスを更新（重要）：
    ```bash
-   vercel alias ls  # 現在のエイリアスを確認
-   vercel promote [deployment-url]  # 最新版をプロモート
+   # 最新のデプロイメントURLを確認
+   vercel ls
+   
+   # カスタムドメインを最新デプロイに設定
+   vercel alias set [最新のdeployment-url] ai-project-builder.ideandtity.com
    ```
+
+### /landingページが404エラーになる場合
+
+`vercel.json`に以下の設定があることを確認：
+```json
+"rewrites": [
+  {
+    "source": "/landing",
+    "destination": "/landing.html"
+  }
+]
+```
 
 ### デプロイが失敗する場合
 
