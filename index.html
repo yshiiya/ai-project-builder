@@ -76,23 +76,29 @@
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
                 <div class="flex">
-                    <button onclick="switchTab('basic')" data-tab="basic" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50 whitespace-nowrap">
-                        ⚙️ 基本設定
-                    </button>
-                    <button onclick="switchTab('advanced')" data-tab="advanced" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
-                        📝 詳細設定
-                    </button>
-                    <button onclick="switchTab('preview')" data-tab="preview" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
-                        💡 検証・活用
-                    </button>
-                    <button onclick="switchTab('starter')" data-tab="starter" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
-                        🚀 開始プロンプト
-                    </button>
+                    <!-- 基本指示セクション -->
+                    <div class="flex flex-1 border-r-2 border-gray-300">
+                        <button onclick="switchTab('basic')" data-tab="basic" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50 whitespace-nowrap">
+                            ⚙️ 基本設定
+                        </button>
+                        <button onclick="switchTab('advanced')" data-tab="advanced" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
+                            📝 詳細設定
+                        </button>
+                        <button onclick="switchTab('preview')" data-tab="preview" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
+                            💡 検証・活用
+                        </button>
+                    </div>
+                    <!-- 開始プロンプトセクション -->
+                    <div class="flex-none">
+                        <button onclick="switchTab('starter')" data-tab="starter" class="tab-btn flex items-center justify-center px-6 md:px-12 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
+                            🚀 開始プロンプト
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Mobile view toggle for preview -->
-            <div class="md:hidden border-b border-gray-200">
+            <div class="md:hidden border-b border-gray-200" id="mobileViewToggle">
                 <div class="flex">
                     <button onclick="switchMobileView('form')" data-view="form" class="mobile-view-btn w-1/2 py-3 text-sm font-medium text-blue-600 bg-blue-50 border-b-2 border-blue-600">
                         📝 設定
@@ -103,7 +109,7 @@
                 </div>
             </div>
             
-            <div class="flex flex-col md:flex-row">
+            <div class="flex flex-col md:flex-row" id="mainContent">
                 <!-- Form Section -->
                 <div class="mobile-tab-content active w-full md:w-1/2 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto mobile-scroll-container" id="mobileFormView" style="max-height: calc(100vh - 200px);">
                     <!-- Basic Tab -->
@@ -459,10 +465,19 @@
                 </div>
 
                 <!-- Starter Tab Content -->
-                <div id="starterTab" class="tab-content">
+                <div id="starterTab" class="tab-content hidden">
                     <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 md:p-6 mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">🚀 プロジェクト開始プロンプト</h3>
-                        <p class="text-sm text-gray-600">基本指示に基づいて、具体的なプロジェクトを開始するためのプロンプトを作成します</p>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">🚀 プロジェクト開始プロンプトビルダー</h3>
+                        <p class="text-sm text-gray-600">AIチャットを開始する際の、構造化されたプロンプトを簡単に作成できます</p>
+                        
+                        <!-- Mode Toggle -->
+                        <div class="mt-4 flex items-center gap-4">
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="useBasicInstructions" class="mr-2" onchange="toggleStarterMode()">
+                                <span class="text-sm font-medium">基本指示の設定を使用</span>
+                            </label>
+                            <span class="text-xs text-gray-500">（マルチエージェント設定を引き継ぐ）</span>
+                        </div>
                     </div>
 
                     <!-- Project Details -->
@@ -495,11 +510,23 @@
                         </div>
                     </div>
 
-                    <!-- Agent Tasks -->
-                    <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
+                    <!-- Agent Tasks / Standalone Roles -->
+                    <div id="starterAgentSection" class="mb-6 bg-white rounded-lg shadow-sm p-4">
                         <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <span class="text-xl">👥</span> エージェント別タスク
+                            <span class="text-xl">👥</span> <span id="agentSectionTitle">エージェント別タスク</span>
                         </h4>
+                        
+                        <!-- Standalone Mode: Add Roles -->
+                        <div id="standaloneRoles" class="hidden">
+                            <button onclick="addStandaloneRole()" class="mb-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
+                                ➕ ロールを追加
+                            </button>
+                            <div id="standaloneRolesList" class="space-y-3">
+                                <!-- Standalone roles will be added here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Basic Instructions Mode: Agent Tasks -->
                         <div id="starterAgentTasks" class="space-y-4">
                             <!-- Agent tasks will be dynamically loaded here -->
                         </div>
@@ -538,6 +565,31 @@
                                 class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
                             💾 保存
                         </button>
+                    </div>
+                </div>
+
+                <!-- Starter Tab Layout -->
+                <div id="starterLayout" class="hidden w-full">
+                    <div class="flex flex-col md:flex-row h-full">
+                        <!-- Starter Form Section -->
+                        <div class="w-full md:w-1/2 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto" style="max-height: calc(100vh - 200px);">
+                            <div id="starterFormContent">
+                                <!-- Starter form content will be moved here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Starter Preview Section -->
+                        <div class="w-full md:w-1/2 p-4 md:p-6 overflow-y-auto" style="max-height: calc(100vh - 200px);">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">生成されたプロンプト</h3>
+                                <button onclick="copyStarterPromptFromPreview()" class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 bg-purple-600 text-white hover:bg-purple-700 text-sm">
+                                    📋 コピー
+                                </button>
+                            </div>
+                            <div class="bg-gray-50 border rounded-lg p-4 min-h-[400px]">
+                                <pre id="starterPromptPreview" class="text-sm text-gray-800 whitespace-pre-wrap font-mono">プロンプトがここに表示されます...</pre>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1254,9 +1306,17 @@
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 const isActive = btn.getAttribute('data-tab') === tabName;
                 if (isActive) {
-                    btn.className = 'tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50 whitespace-nowrap';
+                    if (tabName === 'starter') {
+                        btn.className = 'tab-btn flex items-center justify-center px-6 md:px-12 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-pink-600 border-b-2 border-pink-600 bg-pink-50 whitespace-nowrap';
+                    } else {
+                        btn.className = 'tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-blue-600 border-b-2 border-blue-600 bg-blue-50 whitespace-nowrap';
+                    }
                 } else {
-                    btn.className = 'tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap';
+                    if (btn.getAttribute('data-tab') === 'starter') {
+                        btn.className = 'tab-btn flex items-center justify-center px-6 md:px-12 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap';
+                    } else {
+                        btn.className = 'tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap';
+                    }
                 }
             });
             
@@ -1265,15 +1325,40 @@
                 content.classList.remove('active');
             });
             
-            // Handle special tab content
+            // Handle special layout for starter tab
+            const mainContent = document.getElementById('mainContent');
+            const starterLayout = document.getElementById('starterLayout');
+            const mobileViewToggle = document.getElementById('mobileViewToggle');
+            
             if (tabName === 'starter') {
-                document.getElementById('starterTab').classList.add('active');
+                // Hide normal layout
+                mainContent.style.display = 'none';
+                mobileViewToggle.style.display = 'none';
+                
+                // Show starter layout
+                starterLayout.classList.remove('hidden');
+                
+                // Move starter content to the special layout
+                const starterContent = document.getElementById('starterTab');
+                const starterFormContent = document.getElementById('starterFormContent');
+                starterFormContent.innerHTML = starterContent.innerHTML;
+                
                 loadAgentsForStarter();
-            } else if (tabName === 'basic' || tabName === 'advanced') {
-                document.getElementById(`${tabName}-tab`).classList.add('active');
-            } else if (tabName === 'preview') {
-                document.getElementById(`${tabName}-tab`).classList.add('active');
-                updatePreviewTab();
+            } else {
+                // Show normal layout
+                mainContent.style.display = '';
+                mobileViewToggle.style.display = '';
+                
+                // Hide starter layout
+                starterLayout.classList.add('hidden');
+                
+                // Show appropriate tab
+                if (tabName === 'basic' || tabName === 'advanced') {
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                } else if (tabName === 'preview') {
+                    document.getElementById(`${tabName}-tab`).classList.add('active');
+                    updatePreviewTab();
+                }
             }
         }
 
@@ -2082,6 +2167,56 @@ ${formData.customizations}` : ''}`;
         });
 
         // Starter prompt functions
+        let standaloneRoleId = 0;
+        
+        function toggleStarterMode() {
+            const useBasicInstructions = document.getElementById('useBasicInstructions').checked;
+            const agentSectionTitle = document.getElementById('agentSectionTitle');
+            const starterAgentTasks = document.getElementById('starterAgentTasks');
+            const standaloneRoles = document.getElementById('standaloneRoles');
+            
+            if (useBasicInstructions) {
+                agentSectionTitle.textContent = 'エージェント別タスク';
+                starterAgentTasks.style.display = 'block';
+                standaloneRoles.classList.add('hidden');
+                loadAgentsForStarter();
+            } else {
+                agentSectionTitle.textContent = 'ロール設定';
+                starterAgentTasks.style.display = 'none';
+                standaloneRoles.classList.remove('hidden');
+            }
+        }
+        
+        function addStandaloneRole() {
+            const container = document.getElementById('standaloneRolesList');
+            const roleId = standaloneRoleId++;
+            
+            const roleDiv = document.createElement('div');
+            roleDiv.className = 'p-3 bg-gray-50 rounded-lg';
+            roleDiv.id = `standalone-role-${roleId}`;
+            roleDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <input type="text" id="roleName-${roleId}" 
+                           class="flex-1 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                           placeholder="ロール名（例: データアナリスト）">
+                    <button onclick="removeStandaloneRole(${roleId})" class="ml-2 text-red-500 hover:text-red-700 text-sm">
+                        🗑️ 削除
+                    </button>
+                </div>
+                <textarea id="roleTask-${roleId}" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-20 text-sm"
+                          placeholder="このロールに依頼する具体的なタスクを入力..."></textarea>
+            `;
+            container.appendChild(roleDiv);
+        }
+        
+        function removeStandaloneRole(roleId) {
+            const roleElement = document.getElementById(`standalone-role-${roleId}`);
+            if (roleElement) {
+                roleElement.remove();
+            }
+        }
+        
         function loadAgentsForStarter() {
             const container = document.getElementById('starterAgentTasks');
             if (!container) return;
@@ -2130,8 +2265,10 @@ ${formData.customizations}` : ''}`;
                 prompt += `## ⏰ 期限・マイルストーン\n${deadline}\n\n`;
             }
             
-            // Add agent tasks
-            if (formData.multiAgent && formData.agents.length > 0) {
+            // Add roles/agent tasks
+            const useBasicInstructions = document.getElementById('useBasicInstructions').checked;
+            
+            if (useBasicInstructions && formData.multiAgent && formData.agents.length > 0) {
                 prompt += `## 👥 エージェント別タスク\n\n`;
                 formData.agents.forEach((agent, index) => {
                     const taskElement = document.getElementById(`agentTask-${index}`);
@@ -2141,6 +2278,21 @@ ${formData.customizations}` : ''}`;
                         prompt += `${task}\n\n`;
                     }
                 });
+            } else if (!useBasicInstructions) {
+                // Standalone mode - collect roles
+                const roleElements = document.querySelectorAll('[id^="standalone-role-"]');
+                if (roleElements.length > 0) {
+                    prompt += `## 👥 ロール別タスク\n\n`;
+                    roleElements.forEach(roleElement => {
+                        const roleId = roleElement.id.split('-')[2];
+                        const roleName = document.getElementById(`roleName-${roleId}`)?.value;
+                        const roleTask = document.getElementById(`roleTask-${roleId}`)?.value;
+                        if (roleName && roleTask) {
+                            prompt += `### ${roleName}\n`;
+                            prompt += `${roleTask}\n\n`;
+                        }
+                    });
+                }
             }
             
             if (resources) {
@@ -2157,34 +2309,24 @@ ${formData.customizations}` : ''}`;
                 prompt += `各エージェントは割り当てられたタスクに取り組み、必要に応じて連携してください。`;
             }
             
-            // Show the generated prompt
-            const resultDiv = document.createElement('div');
-            resultDiv.className = 'mt-6 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg';
-            resultDiv.innerHTML = `
-                <h4 class="font-bold text-gray-800 mb-3">生成された開始プロンプト</h4>
-                <pre class="whitespace-pre-wrap text-sm bg-white p-4 rounded border border-purple-200">${prompt}</pre>
-                <div class="mt-3 flex gap-2">
-                    <button onclick="copyStarterPrompt('${prompt.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')" 
-                            class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-sm">
-                        📋 コピー
-                    </button>
-                </div>
-            `;
-            
-            // Remove existing result if any
-            const existingResult = document.querySelector('#starterTab .mt-6.p-4.bg-gradient-to-r');
-            if (existingResult) {
-                existingResult.remove();
+            // Update the preview pane
+            const previewElement = document.getElementById('starterPromptPreview');
+            if (previewElement) {
+                previewElement.textContent = prompt;
+                
+                // Store in global for copy function
+                window.currentStarterPrompt = prompt;
             }
-            
-            // Append new result
-            document.getElementById('starterTab').appendChild(resultDiv);
         }
 
-        function copyStarterPrompt(prompt) {
-            navigator.clipboard.writeText(prompt.replace(/\\n/g, '\n')).then(() => {
-                alert('開始プロンプトをコピーしました！');
-            });
+        function copyStarterPromptFromPreview() {
+            if (window.currentStarterPrompt) {
+                navigator.clipboard.writeText(window.currentStarterPrompt).then(() => {
+                    alert('開始プロンプトをコピーしました！');
+                });
+            } else {
+                alert('まずプロンプトを生成してください。');
+            }
         }
 
         function saveStarterPrompt() {
