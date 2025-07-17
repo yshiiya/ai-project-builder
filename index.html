@@ -465,20 +465,23 @@
                 </div>
 
                 <!-- Starter Tab Content -->
-                <div id="starterTab" class="tab-content hidden">
-                    <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 md:p-6 mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">🚀 プロジェクト開始プロンプトビルダー</h3>
-                        <p class="text-sm text-gray-600">AIチャットを開始する際の、構造化されたプロンプトを簡単に作成できます</p>
-                        
-                        <!-- Mode Toggle -->
-                        <div class="mt-4 flex items-center gap-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" id="useBasicInstructions" class="mr-2" onchange="toggleStarterMode()">
-                                <span class="text-sm font-medium">基本指示の設定を使用</span>
-                            </label>
-                            <span class="text-xs text-gray-500">（マルチエージェント設定を引き継ぐ）</span>
-                        </div>
-                    </div>
+                <div id="starterTab" class="tab-content hidden w-full">
+                    <div class="flex flex-col md:flex-row h-full">
+                        <!-- Starter Form Section -->
+                        <div class="w-full md:w-1/2 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto" style="max-height: calc(100vh - 200px);">
+                            <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 md:p-6 mb-6">
+                                <h3 class="text-lg font-bold text-gray-800 mb-2">🚀 プロジェクト開始プロンプトビルダー</h3>
+                                <p class="text-sm text-gray-600">AIチャットを開始する際の、構造化されたプロンプトを簡単に作成できます</p>
+                                
+                                <!-- Mode Toggle -->
+                                <div class="mt-4 flex items-center gap-4">
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="checkbox" id="useBasicInstructions" class="mr-2" onchange="toggleStarterMode()">
+                                        <span class="text-sm font-medium">基本指示の設定を使用</span>
+                                    </label>
+                                    <span class="text-xs text-gray-500">（マルチエージェント設定を引き継ぐ）</span>
+                                </div>
+                            </div>
 
                     <!-- Project Details -->
                     <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
@@ -555,26 +558,16 @@
                         </div>
                     </div>
 
-                    <!-- Generate Button -->
-                    <div class="flex gap-4 mb-6">
-                        <button onclick="generateStarterPrompt()" 
-                                class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all font-medium">
-                            🚀 開始プロンプトを生成
-                        </button>
-                        <button onclick="saveStarterPrompt()" 
-                                class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
-                            💾 保存
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Starter Tab Layout -->
-                <div id="starterLayout" class="hidden w-full">
-                    <div class="flex flex-col md:flex-row h-full">
-                        <!-- Starter Form Section -->
-                        <div class="w-full md:w-1/2 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto" style="max-height: calc(100vh - 200px);">
-                            <div id="starterFormContent">
-                                <!-- Starter form content will be moved here -->
+                            <!-- Generate Button -->
+                            <div class="flex gap-4 mb-6">
+                                <button onclick="generateStarterPrompt()" 
+                                        class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all font-medium">
+                                    🚀 開始プロンプトを生成
+                                </button>
+                                <button onclick="saveStarterPrompt()" 
+                                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
+                                    💾 保存
+                                </button>
                             </div>
                         </div>
                         
@@ -592,6 +585,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Preview Section -->
                 <div class="mobile-tab-content w-full md:w-1/2 p-4 md:p-6 overflow-y-auto mobile-scroll-container" id="mobilePreviewView" style="max-height: calc(100vh - 200px);">
@@ -1325,32 +1319,22 @@
                 content.classList.remove('active');
             });
             
-            // Handle special layout for starter tab
+            // Handle layout visibility
             const mainContent = document.getElementById('mainContent');
-            const starterLayout = document.getElementById('starterLayout');
             const mobileViewToggle = document.getElementById('mobileViewToggle');
             
             if (tabName === 'starter') {
-                // Hide normal layout
+                // Hide normal layout elements
                 mainContent.style.display = 'none';
                 mobileViewToggle.style.display = 'none';
                 
-                // Show starter layout
-                starterLayout.classList.remove('hidden');
-                
-                // Move starter content to the special layout
-                const starterContent = document.getElementById('starterTab');
-                const starterFormContent = document.getElementById('starterFormContent');
-                starterFormContent.innerHTML = starterContent.innerHTML;
-                
+                // Show starter tab
+                document.getElementById('starterTab').classList.add('active');
                 loadAgentsForStarter();
             } else {
                 // Show normal layout
                 mainContent.style.display = '';
                 mobileViewToggle.style.display = '';
-                
-                // Hide starter layout
-                starterLayout.classList.add('hidden');
                 
                 // Show appropriate tab
                 if (tabName === 'basic' || tabName === 'advanced') {
