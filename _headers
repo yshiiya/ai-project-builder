@@ -1,0 +1,3 @@
+# Netlify headers file to block archive folder access
+/archive/*
+  X-Robots-Tag: noindex
