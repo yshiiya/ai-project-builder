@@ -13,7 +13,9 @@ AI Project Builder is a static web application that helps users create structure
 # Install dependencies (only needed for deployment scripts)
 npm install
 
-# Run local development server
+# Run local development server (Docker推奨)
+docker run -d --rm --name ai-project-builder -p 8000:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx:alpine
+# or
 npm run serve
 # or
 python -m http.server 8000
@@ -41,10 +43,20 @@ git push origin main  # Automatic deployment configured
 
 ### Testing
 No automated testing framework is implemented. Test manually by:
-1. Opening index.html in a browser
+1. Opening index.html in a browser (http://localhost:8000/)
 2. Testing all UI interactions
 3. Verifying import/export functionality
 4. Testing responsive design on mobile
+
+### Local Development with Docker
+When testing features locally, always use Docker:
+```bash
+# Start server
+docker run -d --rm --name ai-project-builder -p 8000:80 -v "$(pwd)":/usr/share/nginx/html:ro nginx:alpine
+
+# Stop server
+docker stop ai-project-builder
+```
 
 ## Architecture
 

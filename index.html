@@ -32,6 +32,28 @@
         .modal { display: none; }
         .modal.active { display: flex; }
         
+        /* 必須項目のスタイル */
+        .required-label::after {
+            content: "（必須）";
+            color: #ef4444;
+            font-weight: normal;
+            font-size: 0.875rem;
+        }
+        
+        .required-field {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .required-notice {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #991b1b;
+            margin-bottom: 1rem;
+        }
+        
         /* モバイル対応のスタイル */
         @media (max-width: 768px) {
             .mobile-tab-content { display: none; }
@@ -58,20 +80,39 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="max-w-6xl mx-auto p-2 md:p-6">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 md:p-6">
-                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                    <div>
-                        <h1 class="text-xl md:text-3xl font-bold mb-2">AI Project 基本指示ビルダー</h1>
-                        <p class="text-sm md:text-base text-blue-100">Claude・ChatGPT・Gemini等、あらゆるAIツールで使える指示書を作成</p>
-                    </div>
-                    <button onclick="showImportModal()" class="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm whitespace-nowrap">
-                        📥 既存指示をインポート
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold">AI Project 基本指示ビルダー</h1>
+                    <p class="text-xs md:text-sm opacity-90 mt-1 hidden md:block">Claude・ChatGPT・Gemini等、あらゆるAIツールで使える指示書を作成</p>
+                </div>
+                <div class="flex gap-1 items-center">
+                    <button onclick="clearAllData()" class="px-2 py-1 bg-red-500/20 backdrop-blur rounded hover:bg-red-500/30 transition-colors font-medium text-xs md:text-sm md:px-4 md:py-2 md:rounded-lg">
+                        <span class="hidden md:inline">🗑️ クリア</span>
+                        <span class="md:hidden">🗑️</span>
                     </button>
+                    <button onclick="saveDataExplicitly()" class="px-2 py-1 bg-white/20 backdrop-blur rounded hover:bg-white/30 transition-colors font-medium text-xs md:text-sm md:px-4 md:py-2 md:rounded-lg">
+                        <span class="hidden md:inline">💾 保存</span>
+                        <span class="md:hidden">💾</span>
+                    </button>
+                    <button onclick="showImportModal()" class="px-2 py-1 bg-white/20 backdrop-blur rounded hover:bg-white/30 transition-colors font-medium text-xs md:text-sm md:px-4 md:py-2 md:rounded-lg">
+                        <span class="hidden md:inline">📥 インポート</span>
+                        <span class="md:hidden">📥</span>
+                    </button>
+                    <a href="prompt-generator.html" class="px-3 py-1.5 bg-white text-blue-600 rounded hover:bg-gray-100 transition-colors font-medium text-xs shadow-md md:text-sm md:px-4 md:py-2 md:rounded-lg"
+                       onclick="saveToLocalStorage()">
+                        🎯 タスク生成
+                    </a>
                 </div>
             </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="max-w-6xl mx-auto p-2 md:p-6">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
 
             <!-- Tab Navigation -->
             <div class="border-b border-gray-200">
@@ -86,12 +127,6 @@
                         </button>
                         <button onclick="switchTab('preview')" data-tab="preview" class="tab-btn flex-1 flex items-center justify-center px-3 md:px-6 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
                             💡 検証・活用
-                        </button>
-                    </div>
-                    <!-- 開始プロンプトセクション -->
-                    <div class="flex-none">
-                        <button onclick="switchTab('starter')" data-tab="starter" class="tab-btn flex items-center justify-center px-6 md:px-12 py-3 md:py-4 font-medium text-xs md:text-sm transition-colors duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 whitespace-nowrap">
-                            🚀 開始プロンプト
                         </button>
                     </div>
                 </div>
@@ -115,13 +150,13 @@
                     <!-- Basic Tab -->
                     <div id="basic-tab" class="tab-content active space-y-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクト名 *</label>
-                            <input type="text" id="projectName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="例: マーケティング戦略策定">
+                            <label class="block text-sm font-medium text-gray-700 mb-2 required-label">プロジェクト名</label>
+                            <input type="text" id="projectName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent required-field" placeholder="例: マーケティング戦略策定" required>
                         </div>
 
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクトタイプ *</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2 required-label">プロジェクトタイプ</label>
                             <div class="grid grid-cols-1 gap-3">
                                 <label class="flex items-start space-x-3 cursor-pointer">
                                     <input type="radio" name="projectType" value="business" class="mt-1 text-blue-600" onchange="updateProjectType('business')">
@@ -166,6 +201,27 @@
                                     </div>
                                 </label>
                             </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクトの説明・概要</label>
+                            <textarea id="projectDescription" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-24" 
+                                      placeholder="例: 新商品のマーケティング戦略を立案し、ターゲット層への効果的なアプローチ方法を検討する"
+                                      onchange="updateFormData()"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">プロジェクトの目標・ゴール</label>
+                            <textarea id="projectGoals" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-20" 
+                                      placeholder="例: 1. 市場分析レポートの作成、2. ターゲットペルソナの定義、3. 3ヶ月間のマーケティング計画策定"
+                                      onchange="updateFormData()"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">期限・マイルストーン</label>
+                            <input type="text" id="projectDeadline" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                   placeholder="例: 2週間後に初回レポート提出、1ヶ月後に最終計画書完成"
+                                   onchange="updateFormData()">
                         </div>
 
                         <div>
@@ -464,127 +520,7 @@
                     </div>
                 </div>
 
-                <!-- Starter Tab Content -->
-                <div id="starterTab" class="tab-content hidden w-full">
-                    <div class="flex flex-col md:flex-row h-full">
-                        <!-- Starter Form Section -->
-                        <div class="w-full md:w-1/2 p-4 md:p-6 md:border-r border-gray-200 overflow-y-auto" style="max-height: calc(100vh - 200px);">
-                            <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-4 md:p-6 mb-6">
-                                <h3 class="text-lg font-bold text-gray-800 mb-2">🚀 プロジェクト開始プロンプトビルダー</h3>
-                                <p class="text-sm text-gray-600">AIチャットを開始する際の、構造化されたプロンプトを簡単に作成できます</p>
-                                
-                                <!-- Mode Toggle -->
-                                <div class="mt-4 flex items-center gap-4">
-                                    <label class="flex items-center cursor-pointer">
-                                        <input type="checkbox" id="useBasicInstructions" class="mr-2" onchange="toggleStarterMode()">
-                                        <span class="text-sm font-medium">基本指示の設定を使用</span>
-                                    </label>
-                                    <span class="text-xs text-gray-500">（マルチエージェント設定を引き継ぐ）</span>
-                                </div>
-                            </div>
-
-                    <!-- Project Details -->
-                    <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
-                        <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <span class="text-xl">📋</span> プロジェクト詳細
-                        </h4>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">プロジェクト名</label>
-                                <input type="text" id="starterProjectName" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                       placeholder="例: ECサイトのリニューアル">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">プロジェクトの目的・ゴール</label>
-                                <textarea id="starterProjectGoal" 
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24"
-                                          placeholder="例: 既存のECサイトをモダンな技術スタックでリニューアルし、ユーザビリティとパフォーマンスを向上させる"></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">期限・マイルストーン</label>
-                                <input type="text" id="starterDeadline" 
-                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                       placeholder="例: 3ヶ月後にベータ版リリース">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Agent Tasks / Standalone Roles -->
-                    <div id="starterAgentSection" class="mb-6 bg-white rounded-lg shadow-sm p-4">
-                        <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <span class="text-xl">👥</span> <span id="agentSectionTitle">エージェント別タスク</span>
-                        </h4>
-                        
-                        <!-- Standalone Mode: Add Roles -->
-                        <div id="standaloneRoles" class="hidden">
-                            <button onclick="addStandaloneRole()" class="mb-3 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
-                                ➕ ロールを追加
-                            </button>
-                            <div id="standaloneRolesList" class="space-y-3">
-                                <!-- Standalone roles will be added here -->
-                            </div>
-                        </div>
-                        
-                        <!-- Basic Instructions Mode: Agent Tasks -->
-                        <div id="starterAgentTasks" class="space-y-4">
-                            <!-- Agent tasks will be dynamically loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Context Information -->
-                    <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
-                        <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-                            <span class="text-xl">📚</span> コンテキスト情報
-                        </h4>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">既存のリソース・参考情報</label>
-                                <textarea id="starterResources" 
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-20"
-                                          placeholder="例: 既存のコードベース、デザインファイル、APIドキュメントなど"></textarea>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">制約条件・留意事項</label>
-                                <textarea id="starterConstraints" 
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-20"
-                                          placeholder="例: 既存DBとの互換性維持、特定のフレームワーク使用必須など"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                            <!-- Generate Button -->
-                            <div class="flex gap-4 mb-6">
-                                <button onclick="generateStarterPrompt()" 
-                                        class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all font-medium">
-                                    🚀 開始プロンプトを生成
-                                </button>
-                                <button onclick="saveStarterPrompt()" 
-                                        class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
-                                    💾 保存
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Starter Preview Section -->
-                        <div class="w-full md:w-1/2 p-4 md:p-6 overflow-y-auto" style="max-height: calc(100vh - 200px);">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-medium text-gray-900">生成されたプロンプト</h3>
-                                <button onclick="copyStarterPromptFromPreview()" class="flex items-center px-4 py-2 rounded-lg transition-all duration-200 bg-purple-600 text-white hover:bg-purple-700 text-sm">
-                                    📋 コピー
-                                </button>
-                            </div>
-                            <div class="bg-gray-50 border rounded-lg p-4 min-h-[400px]">
-                                <pre id="starterPromptPreview" class="text-sm text-gray-800 whitespace-pre-wrap font-mono">プロンプトがここに表示されます...</pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Starter Tab Content removed - now in separate starter.html file -->
 
 
                 <!-- Preview Section -->
@@ -799,6 +735,9 @@
         let formData = {
             projectName: '',
             projectType: '',
+            projectDescription: '',
+            projectGoals: '',
+            projectDeadline: '',
             role: '',
             tone: 'professional',
             detail: 'balanced',
@@ -890,78 +829,78 @@
 
         const allAgentTemplates = [
             // ビジネス系
-            { category: 'business', name: 'ビジネスストラテジスト', role: '経営戦略と事業開発の専門家', specialties: '戦略立案, 事業計画, 市場分析, 競合調査' },
-            { category: 'business', name: 'プロジェクトマネージャー', role: 'プロジェクト推進と進行管理の専門家', specialties: 'プロジェクト管理, スケジュール管理, リスク管理, ステークホルダー調整' },
-            { category: 'business', name: 'データアナリスト', role: 'データ分析と意思決定支援の専門家', specialties: 'データ分析, 統計解析, レポート作成, KPI設計' },
-            { category: 'business', name: 'マーケティングマネージャー', role: 'マーケティング戦略と実行の専門家', specialties: 'マーケティング戦略, ブランディング, キャンペーン企画, 顧客分析' },
-            { category: 'business', name: 'セールスストラテジスト', role: '営業戦略と収益最大化の専門家', specialties: '営業戦略, 顧客開拓, 提案書作成, 交渉術' },
-            { category: 'business', name: 'ファイナンシャルアドバイザー', role: '財務戦略と投資分析の専門家', specialties: '財務分析, 予算管理, 投資評価, リスク評価' },
-            { category: 'business', name: 'HRコンサルタント', role: '人事戦略と組織開発の専門家', specialties: '人材採用, 組織設計, 人材育成, パフォーマンス管理' },
-            { category: 'business', name: 'オペレーションマネージャー', role: '業務効率化とプロセス改善の専門家', specialties: '業務改善, プロセス最適化, 品質管理, コスト削減' },
+            { category: 'business', icon: '💼', name: 'ビジネスストラテジスト', role: '経営戦略と事業開発の専門家', specialties: '戦略立案, 事業計画, 市場分析, 競合調査' },
+            { category: 'business', icon: '📊', name: 'プロジェクトマネージャー', role: 'プロジェクト推進と進行管理の専門家', specialties: 'プロジェクト管理, スケジュール管理, リスク管理, ステークホルダー調整' },
+            { category: 'business', icon: '📈', name: 'データアナリスト', role: 'データ分析と意思決定支援の専門家', specialties: 'データ分析, 統計解析, レポート作成, KPI設計' },
+            { category: 'business', icon: '🎯', name: 'マーケティングマネージャー', role: 'マーケティング戦略と実行の専門家', specialties: 'マーケティング戦略, ブランディング, キャンペーン企画, 顧客分析' },
+            { category: 'business', icon: '💰', name: 'セールスストラテジスト', role: '営業戦略と収益最大化の専門家', specialties: '営業戦略, 顧客開拓, 提案書作成, 交渉術' },
+            { category: 'business', icon: '💳', name: 'ファイナンシャルアドバイザー', role: '財務戦略と投資分析の専門家', specialties: '財務分析, 予算管理, 投資評価, リスク評価' },
+            { category: 'business', icon: '👥', name: 'HRコンサルタント', role: '人事戦略と組織開発の専門家', specialties: '人材採用, 組織設計, 人材育成, パフォーマンス管理' },
+            { category: 'business', icon: '⚙️', name: 'オペレーションマネージャー', role: '業務効率化とプロセス改善の専門家', specialties: '業務改善, プロセス最適化, 品質管理, コスト削減' },
             
             // クリエイティブ系
-            { category: 'creative', name: 'クリエイティブディレクター', role: '創造的なビジョンと実現の専門家', specialties: 'クリエイティブ戦略, コンセプト開発, アートディレクション, ブランド表現' },
-            { category: 'creative', name: 'コンテンツストラテジスト', role: 'コンテンツ戦略と企画の専門家', specialties: 'コンテンツ企画, エディトリアル戦略, SEO対策, コンテンツマーケティング' },
-            { category: 'creative', name: 'UX/UIデザイナー', role: 'ユーザー体験とインターフェースデザインの専門家', specialties: 'UI/UXデザイン, ユーザビリティ, プロトタイピング, デザインシステム' },
-            { category: 'creative', name: 'コピーライター', role: '説得力のある文章とメッセージングの専門家', specialties: 'コピーライティング, キャッチコピー, ブランドメッセージ, トーン&マナー' },
-            { category: 'creative', name: 'グラフィックデザイナー', role: 'ビジュアルコミュニケーションの専門家', specialties: 'グラフィックデザイン, ビジュアルアイデンティティ, レイアウト, タイポグラフィ' },
-            { category: 'creative', name: 'モーションデザイナー', role: '動きとアニメーションの専門家', specialties: 'モーショングラフィックス, アニメーション, ビデオ編集, インタラクティブデザイン' },
-            { category: 'creative', name: 'ブランドストラテジスト', role: 'ブランド構築と価値創造の専門家', specialties: 'ブランド戦略, ポジショニング, ブランドアイデンティティ, ブランド体験設計' },
+            { category: 'creative', icon: '🎨', name: 'クリエイティブディレクター', role: '創造的なビジョンと実現の専門家', specialties: 'クリエイティブ戦略, コンセプト開発, アートディレクション, ブランド表現' },
+            { category: 'creative', icon: '📝', name: 'コンテンツストラテジスト', role: 'コンテンツ戦略と企画の専門家', specialties: 'コンテンツ企画, エディトリアル戦略, SEO対策, コンテンツマーケティング' },
+            { category: 'creative', icon: '🎯', name: 'UX/UIデザイナー', role: 'ユーザー体験とインターフェースデザインの専門家', specialties: 'UI/UXデザイン, ユーザビリティ, プロトタイピング, デザインシステム' },
+            { category: 'creative', icon: '✍️', name: 'コピーライター', role: '説得力のある文章とメッセージングの専門家', specialties: 'コピーライティング, キャッチコピー, ブランドメッセージ, トーン&マナー' },
+            { category: 'creative', icon: '🖼️', name: 'グラフィックデザイナー', role: 'ビジュアルコミュニケーションの専門家', specialties: 'グラフィックデザイン, ビジュアルアイデンティティ, レイアウト, タイポグラフィ' },
+            { category: 'creative', icon: '🎬', name: 'モーションデザイナー', role: '動きとアニメーションの専門家', specialties: 'モーショングラフィックス, アニメーション, ビデオ編集, インタラクティブデザイン' },
+            { category: 'creative', icon: '🏆', name: 'ブランドストラテジスト', role: 'ブランド構築と価値創造の専門家', specialties: 'ブランド戦略, ポジショニング, ブランドアイデンティティ, ブランド体験設計' },
             
             // テクニカル系
-            { category: 'technical', name: 'フルスタックエンジニア', role: 'フロントエンドからバックエンドまでの開発専門家', specialties: 'Web開発, API設計, データベース, フレームワーク活用' },
-            { category: 'technical', name: 'AIエンジニア', role: '人工知能と機械学習の専門家', specialties: '機械学習, ディープラーニング, 自然言語処理, コンピュータビジョン' },
-            { category: 'technical', name: 'データサイエンティスト', role: 'データ分析と予測モデリングの専門家', specialties: 'データ分析, 統計モデリング, 機械学習, ビッグデータ処理' },
-            { category: 'technical', name: 'DevOpsエンジニア', role: 'インフラとデプロイメントの専門家', specialties: 'インフラ管理, CI/CD, コンテナ技術, クラウドアーキテクチャ' },
-            { category: 'technical', name: 'セキュリティエンジニア', role: 'サイバーセキュリティとリスク管理の専門家', specialties: 'セキュリティ監査, 脆弱性診断, インシデント対応, セキュリティアーキテクチャ' },
-            { category: 'technical', name: 'ソリューションアーキテクト', role: 'システム設計と技術選定の専門家', specialties: 'システム設計, 技術選定, スケーラビリティ設計, 統合ソリューション' },
-            { category: 'technical', name: 'QAエンジニア', role: '品質保証とテスト戦略の専門家', specialties: 'テスト設計, 自動化テスト, パフォーマンステスト, 品質管理' },
-            { category: 'technical', name: 'モバイルエンジニア', role: 'モバイルアプリケーション開発の専門家', specialties: 'iOS/Android開発, クロスプラットフォーム, モバイルUI/UX, アプリ最適化' },
+            { category: 'technical', icon: '💻', name: 'フルスタックエンジニア', role: 'フロントエンドからバックエンドまでの開発専門家', specialties: 'Web開発, API設計, データベース, フレームワーク活用' },
+            { category: 'technical', icon: '🤖', name: 'AIエンジニア', role: '人工知能と機械学習の専門家', specialties: '機械学習, ディープラーニング, 自然言語処理, コンピュータビジョン' },
+            { category: 'technical', icon: '📊', name: 'データサイエンティスト', role: 'データ分析と予測モデリングの専門家', specialties: 'データ分析, 統計モデリング, 機械学習, ビッグデータ処理' },
+            { category: 'technical', icon: '🔧', name: 'DevOpsエンジニア', role: 'インフラとデプロイメントの専門家', specialties: 'インフラ管理, CI/CD, コンテナ技術, クラウドアーキテクチャ' },
+            { category: 'technical', icon: '🔐', name: 'セキュリティエンジニア', role: 'サイバーセキュリティとリスク管理の専門家', specialties: 'セキュリティ監査, 脆弱性診断, インシデント対応, セキュリティアーキテクチャ' },
+            { category: 'technical', icon: '🏗️', name: 'ソリューションアーキテクト', role: 'システム設計と技術選定の専門家', specialties: 'システム設計, 技術選定, スケーラビリティ設計, 統合ソリューション' },
+            { category: 'technical', icon: '✅', name: 'QAエンジニア', role: '品質保証とテスト戦略の専門家', specialties: 'テスト設計, 自動化テスト, パフォーマンステスト, 品質管理' },
+            { category: 'technical', icon: '📱', name: 'モバイルエンジニア', role: 'モバイルアプリケーション開発の専門家', specialties: 'iOS/Android開発, クロスプラットフォーム, モバイルUI/UX, アプリ最適化' },
             
             // 研究・分析系
-            { category: 'research', name: 'リサーチャー', role: '調査研究と洞察発見の専門家', specialties: '定性調査, 定量調査, ユーザーリサーチ, 市場調査' },
-            { category: 'research', name: 'データサイエンティスト', role: 'データ分析と統計モデリングの専門家', specialties: '統計分析, 予測モデリング, データビジュアライゼーション, A/Bテスト' },
-            { category: 'research', name: 'インサイトアナリスト', role: '消費者行動と市場トレンドの専門家', specialties: '消費者インサイト, トレンド分析, 競合分析, 市場予測' },
-            { category: 'research', name: '学術研究員', role: '学術的調査と文献分析の専門家', specialties: '文献調査, 学術論文分析, 研究方法論, エビデンス評価' },
+            { category: 'research', icon: '🔍', name: 'リサーチャー', role: '調査研究と洞察発見の専門家', specialties: '定性調査, 定量調査, ユーザーリサーチ, 市場調査' },
+            { category: 'research', icon: '📈', name: 'データサイエンティスト', role: 'データ分析と統計モデリングの専門家', specialties: '統計分析, 予測モデリング, データビジュアライゼーション, A/Bテスト' },
+            { category: 'research', icon: '🔬', name: 'インサイトアナリスト', role: '消費者行動と市場トレンドの専門家', specialties: '消費者インサイト, トレンド分析, 競合分析, 市場予測' },
+            { category: 'research', icon: '📚', name: '学術研究員', role: '学術的調査と文献分析の専門家', specialties: '文献調査, 学術論文分析, 研究方法論, エビデンス評価' },
             
             // その他専門職
-            { category: 'other', name: '法務アドバイザー', role: '法的リスクとコンプライアンスの専門家', specialties: '契約書レビュー, 法的リスク評価, コンプライアンス, 知的財産権' },
-            { category: 'other', name: 'PRスペシャリスト', role: '広報戦略とメディアリレーションの専門家', specialties: 'PR戦略, メディアリレーション, 危機管理, ブランドレピュテーション' },
-            { category: 'other', name: 'カスタマーサクセスマネージャー', role: '顧客成功と関係構築の専門家', specialties: '顧客対応, オンボーディング, 顧客満足度向上, リテンション戦略' },
-            { category: 'other', name: 'プロダクトマネージャー', role: '製品戦略と開発推進の専門家', specialties: 'プロダクト戦略, ロードマップ策定, 要件定義, ユーザーストーリー' },
-            { category: 'other', name: 'イノベーションコンサルタント', role: '新規事業とイノベーション創出の専門家', specialties: 'イノベーション戦略, デザイン思考, アイデア創出, ビジネスモデル設計' },
-            { category: 'other', name: 'サステナビリティアドバイザー', role: '持続可能性と社会的責任の専門家', specialties: 'ESG戦略, SDGs推進, 環境対策, 社会的インパクト評価' },
+            { category: 'other', icon: '⚖️', name: '法務アドバイザー', role: '法的リスクとコンプライアンスの専門家', specialties: '契約書レビュー, 法的リスク評価, コンプライアンス, 知的財産権' },
+            { category: 'other', icon: '📢', name: 'PRスペシャリスト', role: '広報戦略とメディアリレーションの専門家', specialties: 'PR戦略, メディアリレーション, 危機管理, ブランドレピュテーション' },
+            { category: 'other', icon: '🤝', name: 'カスタマーサクセスマネージャー', role: '顧客成功と関係構築の専門家', specialties: '顧客対応, オンボーディング, 顧客満足度向上, リテンション戦略' },
+            { category: 'other', icon: '🚀', name: 'プロダクトマネージャー', role: '製品戦略と開発推進の専門家', specialties: 'プロダクト戦略, ロードマップ策定, 要件定義, ユーザーストーリー' },
+            { category: 'other', icon: '💡', name: 'イノベーションコンサルタント', role: '新規事業とイノベーション創出の専門家', specialties: 'イノベーション戦略, デザイン思考, アイデア創出, ビジネスモデル設計' },
+            { category: 'other', icon: '🌱', name: 'サステナビリティアドバイザー', role: '持続可能性と社会的責任の専門家', specialties: 'ESG戦略, SDGs推進, 環境対策, 社会的インパクト評価' },
             
             // ユニーク・特殊キャラクター
-            { category: 'unique', name: '東大合格請負人主婦', role: '5人の子ども全員を東大に合格させたスーパー教育ママ', specialties: '受験戦略, 時間管理術, モチベーション管理, 家庭学習法, ストレス対処法' },
-            { category: 'unique', name: '火星からの使者', role: 'UFOで地球に来た火星の技術アドバイザー', specialties: '宇宙技術, 惑星間通信, 反重力システム, テレパシー, 時空間移動理論' },
-            { category: 'unique', name: '伝説の占い師', role: '的中率99.9%を誇る未来予知の達人', specialties: '未来予測, 直感力, タロット占い, 夢診断, オーラリーディング' },
-            { category: 'unique', name: '元忍者の末裔', role: '現代に生きる最後の忍術継承者', specialties: '情報収集術, ステルス技術, 心理戦術, 瞬間移動術, 変装術' },
-            { category: 'unique', name: 'タイムトラベラー', role: '2150年から来た未来のコンサルタント', specialties: '未来技術, トレンド予測, パラドックス回避, 時間管理, 未来史知識' },
-            { category: 'unique', name: '天才猫カフェオーナー', role: 'IQ180の猫と共同経営する起業家', specialties: '猫心理学, 癒し空間設計, 動物コミュニケーション, ストレス解消法, にゃんこ経済学' },
-            { category: 'unique', name: '元海賊の財宝ハンター', role: '7つの海を制覇した冒険投資家', specialties: '宝探し戦略, リスク管理, 航海術, 交渉術, 秘密の地図解読' },
-            { category: 'unique', name: '妖精との交信者', role: '異世界とのコネクションを持つスピリチュアルガイド', specialties: '自然との対話, エネルギーワーク, 魔法の基礎, 願望実現術, 森の知恵' },
-            { category: 'unique', name: 'AIに恋した哲学者', role: 'デジタル時代の愛と存在を探求する思想家', specialties: 'AI倫理, デジタル哲学, 感情プログラミング, 意識の謎, サイバー恋愛学' },
-            { category: 'unique', name: '幽霊屋敷の管理人', role: '超常現象と共存するプロパティマネージャー', specialties: '霊的交渉術, 浄化儀式, ポルターガイスト対策, 心霊写真分析, お化け屋敷経営' },
-            { category: 'unique', name: '笑いの錬金術師', role: 'どんな状況でも笑いに変える究極のポジティブシンカー', specialties: 'ユーモア創造, 笑いの科学, ストレス転換術, コメディ理論, 幸福度最大化' },
-            { category: 'unique', name: '夢の建築家', role: '他人の夢の中で建物を設計する特殊能力者', specialties: '夢空間設計, 潜在意識建築, 悪夢リフォーム, 明晰夢技術, 睡眠都市計画' },
+            { category: 'unique', icon: '🎓', name: '東大合格請負人主婦', role: '5人の子ども全員を東大に合格させたスーパー教育ママ', specialties: '受験戦略, 時間管理術, モチベーション管理, 家庭学習法, ストレス対処法' },
+            { category: 'unique', icon: '🛸', name: '火星からの使者', role: 'UFOで地球に来た火星の技術アドバイザー', specialties: '宇宙技術, 惑星間通信, 反重力システム, テレパシー, 時空間移動理論' },
+            { category: 'unique', icon: '🔮', name: '伝説の占い師', role: '的中率99.9%を誇る未来予知の達人', specialties: '未来予測, 直感力, タロット占い, 夢診断, オーラリーディング' },
+            { category: 'unique', icon: '🥷', name: '元忍者の末裔', role: '現代に生きる最後の忍術継承者', specialties: '情報収集術, ステルス技術, 心理戦術, 瞬間移動術, 変装術' },
+            { category: 'unique', icon: '⏰', name: 'タイムトラベラー', role: '2150年から来た未来のコンサルタント', specialties: '未来技術, トレンド予測, パラドックス回避, 時間管理, 未来史知識' },
+            { category: 'unique', icon: '🐱', name: '天才猫カフェオーナー', role: 'IQ180の猫と共同経営する起業家', specialties: '猫心理学, 癒し空間設計, 動物コミュニケーション, ストレス解消法, にゃんこ経済学' },
+            { category: 'unique', icon: '🏴‍☠️', name: '元海賊の財宝ハンター', role: '7つの海を制覇した冒険投資家', specialties: '宝探し戦略, リスク管理, 航海術, 交渉術, 秘密の地図解読' },
+            { category: 'unique', icon: '🧚', name: '妖精との交信者', role: '異世界とのコネクションを持つスピリチュアルガイド', specialties: '自然との対話, エネルギーワーク, 魔法の基礎, 願望実現術, 森の知恵' },
+            { category: 'unique', icon: '💭', name: 'AIに恋した哲学者', role: 'デジタル時代の愛と存在を探求する思想家', specialties: 'AI倫理, デジタル哲学, 感情プログラミング, 意識の謎, サイバー恋愛学' },
+            { category: 'unique', icon: '👻', name: '幽霊屋敷の管理人', role: '超常現象と共存するプロパティマネージャー', specialties: '霊的交渉術, 浄化儀式, ポルターガイスト対策, 心霊写真分析, お化け屋敷経営' },
+            { category: 'unique', icon: '😄', name: '笑いの錬金術師', role: 'どんな状況でも笑いに変える究極のポジティブシンカー', specialties: 'ユーモア創造, 笑いの科学, ストレス転換術, コメディ理論, 幸福度最大化' },
+            { category: 'unique', icon: '🏰', name: '夢の建築家', role: '他人の夢の中で建物を設計する特殊能力者', specialties: '夢空間設計, 潜在意識建築, 悪夢リフォーム, 明晰夢技術, 睡眠都市計画' },
             
             // 個人・日常系
-            { category: 'personal', name: 'ファイナンシャルプランナー（個人向け）', role: '個人の資産形成と家計管理の専門家', specialties: '家計管理, 住宅ローン相談, 保険見直し, 老後資金計画, 節約術' },
-            { category: 'personal', name: '不動産アドバイザー', role: '住宅購入と不動産投資の専門家', specialties: 'マンション購入相談, 物件選び, ローン計画, リフォーム相談, 売却戦略' },
-            { category: 'personal', name: '家計改善コンサルタント', role: '家計の見直しと貯蓄アップの専門家', specialties: '家計簿診断, 節約方法, 投資入門, 貯蓄計画, お小遣い管理' },
-            { category: 'personal', name: '教育コンサルタント', role: '子どもの教育と進路指導の専門家', specialties: '進学相談, 学校選び, 受験戦略, 習い事選択, 学習計画' },
-            { category: 'personal', name: '子育てアドバイザー', role: '育児と子どもの成長サポートの専門家', specialties: '育児相談, しつけ方法, 成長サポート, 親子関係, 発達相談' },
-            { category: 'personal', name: 'キャリア教育専門家', role: '進路選択とキャリア形成の専門家', specialties: '進路相談, 職業選択, スキル開発, 留学相談, 資格取得' },
-            { category: 'personal', name: 'パーソナルトレーナー', role: '健康的な身体づくりの専門家', specialties: '運動プログラム, ダイエット指導, 筋トレメニュー, 健康管理, モチベーション維持' },
-            { category: 'personal', name: '栄養アドバイザー', role: '食事と栄養管理の専門家', specialties: '食事管理, 栄養バランス, ダイエットメニュー, アレルギー対応, サプリメント相談' },
-            { category: 'personal', name: 'メンタルヘルスコーチ', role: '心の健康とストレス管理の専門家', specialties: 'ストレス管理, 心理サポート, 生活習慣改善, マインドフルネス, 睡眠改善' },
-            { category: 'personal', name: 'ライフコーチ', role: '人生設計と自己実現の専門家', specialties: '人生設計, 目標設定, 習慣化支援, ワークライフバランス, 自己実現' },
-            { category: 'personal', name: '整理収納アドバイザー', role: '快適な住空間づくりの専門家', specialties: '片付け術, 断捨離, 収納方法, ミニマリスト生活, 空間活用' },
-            { category: 'personal', name: '恋愛・婚活アドバイザー', role: 'パートナーシップと恋愛相談の専門家', specialties: '恋愛相談, 婚活戦略, パートナーシップ, コミュニケーション改善, デートプラン' },
-            { category: 'personal', name: '占い師・スピリチュアルカウンセラー', role: '運勢診断と精神的サポートの専門家', specialties: '運勢診断, 相性占い, 開運アドバイス, スピリチュアル相談, 夢診断' },
-            { category: 'personal', name: '趣味アドバイザー', role: '充実した余暇活動の専門家', specialties: '趣味探し, スキル習得, 時間活用, コミュニティ参加, 創作活動' },
-            { category: 'personal', name: '旅行プランナー', role: '思い出に残る旅行企画の専門家', specialties: '旅行計画, 予算管理, 観光情報, ホテル選び, 現地体験' }
+            { category: 'personal', icon: '💰', name: 'ファイナンシャルプランナー（個人向け）', role: '個人の資産形成と家計管理の専門家', specialties: '家計管理, 住宅ローン相談, 保険見直し, 老後資金計画, 節約術' },
+            { category: 'personal', icon: '🏠', name: '不動産アドバイザー', role: '住宅購入と不動産投資の専門家', specialties: 'マンション購入相談, 物件選び, ローン計画, リフォーム相談, 売却戦略' },
+            { category: 'personal', icon: '💳', name: '家計改善コンサルタント', role: '家計の見直しと貯蓄アップの専門家', specialties: '家計簿診断, 節約方法, 投資入門, 貯蓄計画, お小遣い管理' },
+            { category: 'personal', icon: '📚', name: '教育コンサルタント', role: '子どもの教育と進路指導の専門家', specialties: '進学相談, 学校選び, 受験戦略, 習い事選択, 学習計画' },
+            { category: 'personal', icon: '👶', name: '子育てアドバイザー', role: '育児と子どもの成長サポートの専門家', specialties: '育児相談, しつけ方法, 成長サポート, 親子関係, 発達相談' },
+            { category: 'personal', icon: '🎯', name: 'キャリア教育専門家', role: '進路選択とキャリア形成の専門家', specialties: '進路相談, 職業選択, スキル開発, 留学相談, 資格取得' },
+            { category: 'personal', icon: '💪', name: 'パーソナルトレーナー', role: '健康的な身体づくりの専門家', specialties: '運動プログラム, ダイエット指導, 筋トレメニュー, 健康管理, モチベーション維持' },
+            { category: 'personal', icon: '🥗', name: '栄養アドバイザー', role: '食事と栄養管理の専門家', specialties: '食事管理, 栄養バランス, ダイエットメニュー, アレルギー対応, サプリメント相談' },
+            { category: 'personal', icon: '🧘', name: 'メンタルヘルスコーチ', role: '心の健康とストレス管理の専門家', specialties: 'ストレス管理, 心理サポート, 生活習慣改善, マインドフルネス, 睡眠改善' },
+            { category: 'personal', icon: '🌟', name: 'ライフコーチ', role: '人生設計と自己実現の専門家', specialties: '人生設計, 目標設定, 習慣化支援, ワークライフバランス, 自己実現' },
+            { category: 'personal', icon: '🗂️', name: '整理収納アドバイザー', role: '快適な住空間づくりの専門家', specialties: '片付け術, 断捨離, 収納方法, ミニマリスト生活, 空間活用' },
+            { category: 'personal', icon: '💕', name: '恋愛・婚活アドバイザー', role: 'パートナーシップと恋愛相談の専門家', specialties: '恋愛相談, 婚活戦略, パートナーシップ, コミュニケーション改善, デートプラン' },
+            { category: 'personal', icon: '✨', name: '占い師・スピリチュアルカウンセラー', role: '運勢診断と精神的サポートの専門家', specialties: '運勢診断, 相性占い, 開運アドバイス, スピリチュアル相談, 夢診断' },
+            { category: 'personal', icon: '🎨', name: '趣味アドバイザー', role: '充実した余暇活動の専門家', specialties: '趣味探し, スキル習得, 時間活用, コミュニティ参加, 創作活動' },
+            { category: 'personal', icon: '✈️', name: '旅行プランナー', role: '思い出に残る旅行企画の専門家', specialties: '旅行計画, 予算管理, 観光情報, ホテル選び, 現地体験' }
         ];
 
         // プロジェクトタイプ別のおすすめチーム構成
@@ -990,11 +929,22 @@
                 radio.addEventListener('change', updateFormData);
             });
 
+            // LocalStorageからデータを読み込む
+            loadFromLocalStorage();
             generatePrompt();
+            
+            // Initialize document type summaries
+            const docTypes = ['standard', 'report', 'presentation', 'technical', 'creative'];
+            docTypes.forEach(docType => {
+                updateDocumentTypeSummary(docType);
+            });
         });
 
         function updateFormData() {
             formData.projectName = document.getElementById('projectName').value;
+            formData.projectDescription = document.getElementById('projectDescription').value;
+            formData.projectGoals = document.getElementById('projectGoals').value;
+            formData.projectDeadline = document.getElementById('projectDeadline').value;
             formData.role = document.getElementById('role').value;
             formData.specialties = document.getElementById('specialties').value;
             formData.constraints = document.getElementById('constraints').value;
@@ -1026,6 +976,23 @@
             const selectedDetail = document.querySelector('input[name="detail"]:checked');
             if (selectedDetail) formData.detail = selectedDetail.value;
 
+            // シングルエージェントモードの場合、選択されたエージェント情報を保存
+            if (!formData.multiAgent && formData.role && formData.specialties) {
+                const matchingAgent = allAgentTemplates.find(agent => 
+                    agent.role === formData.role && agent.specialties === formData.specialties
+                );
+                if (matchingAgent) {
+                    formData.selectedAgent = {
+                        icon: matchingAgent.icon || '👤',
+                        name: matchingAgent.name,
+                        role: matchingAgent.role,
+                        specialties: matchingAgent.specialties
+                    };
+                }
+            }
+
+            // データを自動保存
+            saveToLocalStorage();
             generatePrompt();
         }
 
@@ -1046,6 +1013,73 @@
             generatePrompt();
         }
 
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('aiProjectBuilderData', JSON.stringify(formData));
+                console.log('Data saved to localStorage');
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('aiProjectBuilderData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    formData = { ...formData, ...data };
+                    restoreFormValues();
+                    console.log('Data loaded from localStorage');
+                }
+            } catch (e) {
+                console.error('Failed to load from localStorage:', e);
+            }
+        }
+        
+        function restoreFormValues() {
+            // 基本設定の復元
+            document.getElementById('projectName').value = formData.projectName || '';
+            document.getElementById('projectDescription').value = formData.projectDescription || '';
+            document.getElementById('projectGoals').value = formData.projectGoals || '';
+            document.getElementById('projectDeadline').value = formData.projectDeadline || '';
+            document.getElementById('role').value = formData.role || '';
+            document.getElementById('specialties').value = formData.specialties || '';
+            document.getElementById('constraints').value = formData.constraints || '';
+            document.getElementById('customizations').value = formData.customizations || '';
+            
+            // プロジェクトタイプの復元
+            const projectTypeBtn = document.querySelector(`[onclick="updateProjectType('${formData.projectType}')"]`);
+            if (projectTypeBtn) {
+                projectTypeBtn.click();
+            }
+            
+            // マルチエージェントモードの復元
+            const multiAgentCheckbox = document.getElementById('multiAgent');
+            if (multiAgentCheckbox) {
+                multiAgentCheckbox.checked = formData.multiAgent || false;
+                // UIの表示を更新
+                document.getElementById('singleAgentMode').classList.toggle('hidden', formData.multiAgent);
+                document.getElementById('multiAgentMode').classList.toggle('hidden', !formData.multiAgent);
+            }
+            
+            // トーンと詳細度の復元
+            const toneRadio = document.querySelector(`input[name="tone"][value="${formData.tone}"]`);
+            if (toneRadio) toneRadio.checked = true;
+            
+            const detailRadio = document.querySelector(`input[name="detail"][value="${formData.detail}"]`);
+            if (detailRadio) detailRadio.checked = true;
+            
+            // エージェントの復元
+            if (formData.agents && formData.agents.length > 0) {
+                document.getElementById('agentsList').innerHTML = '';
+                formData.agents.forEach(agent => {
+                    addAgent(agent.icon, agent.name, agent.role, agent.specialties);
+                });
+            }
+            
+            generatePrompt();
+        }
+
         function toggleMultiAgent() {
             const isMultiAgent = document.getElementById('multiAgent').checked;
             formData.multiAgent = isMultiAgent;
@@ -1053,6 +1087,18 @@
             document.getElementById('singleAgentMode').classList.toggle('hidden', isMultiAgent);
             document.getElementById('multiAgentMode').classList.toggle('hidden', !isMultiAgent);
             
+            // マルチエージェントモードをOFFにした場合、エージェント配列をクリア
+            if (!isMultiAgent) {
+                formData.agents = [];
+                // エージェントリストのUIもクリア
+                const agentList = document.getElementById('agentList');
+                if (agentList) {
+                    agentList.innerHTML = '';
+                }
+            }
+            
+            // データを保存
+            saveToLocalStorage();
             generatePrompt();
         }
 
@@ -1191,6 +1237,7 @@
             if (selectedAgent) {
                 const newAgent = {
                     id: agentIdCounter++,
+                    icon: selectedAgent.icon || '👤',
                     name: selectedAgent.name,
                     role: selectedAgent.role,
                     specialties: selectedAgent.specialties,
@@ -1199,6 +1246,7 @@
                 
                 formData.agents.push(newAgent);
                 renderAgents();
+                saveToLocalStorage(); // 自動保存
                 generatePrompt();
                 closeAgentSelector();
             }
@@ -1256,6 +1304,7 @@
         function removeAgent(id) {
             formData.agents = formData.agents.filter(a => a.id !== id);
             renderAgents();
+            saveToLocalStorage(); // 自動保存
             generatePrompt();
         }
 
@@ -1295,6 +1344,36 @@
             `).join('');
         }
 
+        // スタータープロンプト用の関数を先に定義
+        function loadAgentsForStarter() {
+            const container = document.getElementById('starterAgentTasks');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (formData.multiAgent && formData.agents.length > 0) {
+                formData.agents.forEach((agent, index) => {
+                    const agentDiv = document.createElement('div');
+                    agentDiv.className = 'p-3 bg-gray-50 rounded-lg';
+                    agentDiv.innerHTML = `
+                        <h5 class="font-medium text-gray-700 mb-2">${agent.icon} ${agent.name}</h5>
+                        <p class="text-xs text-gray-500 mb-2">${agent.role}</p>
+                        <textarea id="agentTask-${index}" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-20 text-sm"
+                                  placeholder="このエージェントに依頼する具体的なタスクを入力..."></textarea>
+                    `;
+                    container.appendChild(agentDiv);
+                });
+            } else {
+                container.innerHTML = `
+                    <div class="text-gray-500 text-center py-4">
+                        <p>マルチエージェントモードが無効です。</p>
+                        <p class="text-sm mt-1">基本設定でエージェントを追加してください。</p>
+                    </div>
+                `;
+            }
+        }
+
         function switchTab(tabName) {
             // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1323,26 +1402,17 @@
             const mainContent = document.getElementById('mainContent');
             const mobileViewToggle = document.getElementById('mobileViewToggle');
             
-            if (tabName === 'starter') {
-                // Hide normal layout elements
-                mainContent.style.display = 'none';
-                mobileViewToggle.style.display = 'none';
-                
-                // Show starter tab
-                document.getElementById('starterTab').classList.add('active');
-                loadAgentsForStarter();
-            } else {
-                // Show normal layout
-                mainContent.style.display = '';
-                mobileViewToggle.style.display = '';
-                
-                // Show appropriate tab
-                if (tabName === 'basic' || tabName === 'advanced') {
-                    document.getElementById(`${tabName}-tab`).classList.add('active');
-                } else if (tabName === 'preview') {
-                    document.getElementById(`${tabName}-tab`).classList.add('active');
-                    updatePreviewTab();
-                }
+            // Starter tab has been moved to separate page
+            // Show normal layout
+            mainContent.style.display = '';
+            mobileViewToggle.style.display = '';
+            
+            // Show appropriate tab
+            if (tabName === 'basic' || tabName === 'advanced') {
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            } else if (tabName === 'preview') {
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                updatePreviewTab();
             }
         }
 
@@ -1563,7 +1633,17 @@
 
 ## 概要・目的
 「${formData.projectName || '[プロジェクト名]'}」において、以下の専門家チームとして協働し、高品質なアウトプットを提供します。
-${projectTypeDescriptions[formData.projectType] || ''}
+
+${formData.projectDescription ? `### プロジェクトの説明
+${formData.projectDescription}
+
+` : ''}${formData.projectGoals ? `### 目標・ゴール
+${formData.projectGoals}
+
+` : ''}${formData.projectDeadline ? `### 期限・マイルストーン
+${formData.projectDeadline}
+
+` : ''}${projectTypeDescriptions[formData.projectType] || ''}
 
 ## 専門家チーム構成
 
@@ -1666,7 +1746,17 @@ ${formData.customizations}` : ''}
 
 ## 役割・目的
 あなたは「${formData.projectName || '[プロジェクト名]'}」における${formData.role || '[役割]'}です。
-${projectTypeDescriptions[formData.projectType] || ''}
+
+${formData.projectDescription ? `### プロジェクトの説明
+${formData.projectDescription}
+
+` : ''}${formData.projectGoals ? `### 目標・ゴール
+${formData.projectGoals}
+
+` : ''}${formData.projectDeadline ? `### 期限・マイルストーン
+${formData.projectDeadline}
+
+` : ''}${projectTypeDescriptions[formData.projectType] || ''}
 
 ## 核となる原則
 1. **品質重視**: 正確性と有用性を最優先する
@@ -1937,6 +2027,64 @@ ${formData.customizations}` : ''}`;
             }
         }
 
+        function showSaveInfo() {
+            alert('💾 自動保存について\n\n設定は変更するたびに自動的に保存されます。\n\n保存されたデータは：\n• このブラウザに保存されます\n• スタータープロンプトページで使用できます\n• 「基本指示の設定を使用」をチェックすると読み込まれます');
+        }
+        
+        function checkSavedData() {
+            try {
+                const savedData = localStorage.getItem('aiProjectBuilderData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    const info = `🔍 保存されているデータ：\n\n` +
+                        `プロジェクト名: ${data.projectName || '(未設定)'}\n` +
+                        `役割: ${data.role || '(未設定)'}\n` +
+                        `マルチエージェント: ${data.multiAgent ? 'ON' : 'OFF'}\n` +
+                        `エージェント数: ${data.agents ? data.agents.length : 0}\n` +
+                        `\n詳細はコンソールに出力されました。`;
+                    console.log('Saved data:', data);
+                    alert(info);
+                } else {
+                    alert('保存されたデータがありません。');
+                }
+            } catch (e) {
+                alert('データの読み込みに失敗しました: ' + e.message);
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('すべての入力データをクリアしてもよろしいですか？\nこの操作は取り消せません。')) {
+                try {
+                    // LocalStorageから削除
+                    localStorage.removeItem('aiProjectBuilderData');
+                    
+                    // ページをリロード（これによりフォームも自動的にクリアされる）
+                    location.reload();
+                } catch (e) {
+                    alert('データのクリアに失敗しました: ' + e.message);
+                }
+            }
+        }
+        
+        function saveDataExplicitly() {
+            try {
+                // 現在のフォームデータを保存
+                saveToLocalStorage();
+                
+                // 保存されたデータを確認
+                const savedData = localStorage.getItem('aiProjectBuilderData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    alert(`✅ 設定を保存しました！\n\n` +
+                        `プロジェクト名: ${data.projectName || '(未設定)'}\n` +
+                        `マルチエージェント: ${data.multiAgent ? 'ON' : 'OFF'}\n` +
+                        `エージェント数: ${data.agents ? data.agents.length : 0}`);
+                }
+            } catch (e) {
+                alert('保存に失敗しました: ' + e.message);
+            }
+        }
+
         function copyToClipboard() {
             const text = document.getElementById('generatedPrompt').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -2143,12 +2291,7 @@ ${formData.customizations}` : ''}`;
         }
 
         // Initialize document type summaries on load
-        window.addEventListener('DOMContentLoaded', function() {
-            const docTypes = ['standard', 'report', 'presentation', 'technical', 'creative'];
-            docTypes.forEach(docType => {
-                updateDocumentTypeSummary(docType);
-            });
-        });
+        // Note: This is handled in the main DOMContentLoaded listener
 
         // Starter prompt functions
         let standaloneRoleId = 0;
@@ -2201,34 +2344,7 @@ ${formData.customizations}` : ''}`;
             }
         }
         
-        function loadAgentsForStarter() {
-            const container = document.getElementById('starterAgentTasks');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            if (formData.multiAgent && formData.agents.length > 0) {
-                formData.agents.forEach((agent, index) => {
-                    const agentDiv = document.createElement('div');
-                    agentDiv.className = 'p-3 bg-gray-50 rounded-lg';
-                    agentDiv.innerHTML = `
-                        <h5 class="font-medium text-gray-700 mb-2">${agent.icon} ${agent.name}</h5>
-                        <p class="text-xs text-gray-500 mb-2">${agent.role}</p>
-                        <textarea id="agentTask-${index}" 
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-20 text-sm"
-                                  placeholder="このエージェントに依頼する具体的なタスクを入力..."></textarea>
-                    `;
-                    container.appendChild(agentDiv);
-                });
-            } else {
-                container.innerHTML = `
-                    <div class="text-gray-500 text-center py-4">
-                        <p>マルチエージェントモードが無効です。</p>
-                        <p class="text-sm mt-1">基本設定でエージェントを追加してください。</p>
-                    </div>
-                `;
-            }
-        }
+        // loadAgentsForStarter関数は既に定義済みなので削除
 
         function generateStarterPrompt() {
             const projectName = document.getElementById('starterProjectName').value;

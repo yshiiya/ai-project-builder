@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project プロンプトジェネレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+        .preview-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+        .task-type-card {
+            position: relative;
+        }
+        .task-type-card.ring-2 {
+            animation: pulse-ring 2s ease-in-out;
+        }
+        @keyframes pulse-ring {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
+            }
+        }
+        
+        /* 必須項目のスタイル */
+        .required-label::after {
+            content: "（必須）";
+            color: #ef4444;
+            font-weight: normal;
+            font-size: 0.875rem;
+        }
+        
+        .required-field {
+            border-left: 3px solid #ef4444;
+        }
+        
+        .required-notice {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold">AI Project プロンプトジェネレーター</h1>
+                    <p class="text-xs md:text-sm opacity-90 mt-1 hidden md:block">タスクに最適化されたプロンプトを自動生成</p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <a href="index.html" class="px-3 py-1.5 bg-white text-blue-600 rounded hover:bg-gray-100 transition-colors font-medium text-xs shadow-md md:text-sm md:px-4 md:py-2 md:rounded-lg">
+                        ← 基本指示へ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Basic Instructions Notice -->
+        <div id="basicInstructionsNotice" class="hidden mb-6 p-4 bg-blue-100 border border-blue-300 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-800">
+                        <span class="font-medium">📋 基本指示が読み込まれました:</span>
+                        <span id="loadedProjectName" class="ml-2"></span>
+                    </p>
+                    <p id="projectTypeInfo" class="text-sm text-blue-700 mt-1"></p>
+                </div>
+                <div id="recommendedTasksBadge" class="hidden text-sm bg-blue-200 text-blue-800 px-3 py-1 rounded-full">
+                    <span id="projectTypeLabel"></span>の推奨タスク
+                </div>
+            </div>
+        </div>
+        
+        <!-- Usage Guide -->
+        <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p class="text-sm text-amber-800">
+                💡 <strong>通常の使い方：</strong>
+                基本指示を設定済みの場合は、タスクタイプ（分析・コンテンツ作成など）を選んで個別タスクを実行してください。
+                プロジェクト計画は、本格的な計画立案が必要な場合のみご利用ください。
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Left Column: Task Input -->
+            <div class="space-y-6">
+                <!-- Task Type Selection -->
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="font-bold text-base mb-3 flex items-center gap-2 required-label">
+                        <span class="text-lg">🎯</span> タスクタイプを選択
+                    </h3>
+                    
+                    <div class="grid grid-cols-3 md:grid-cols-4 gap-2">
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="project-plan" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="project-plan">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">📋</div>
+                                <div class="text-sm font-medium">プロジェクト<br>計画</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="analysis" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="analysis">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">📊</div>
+                                <div class="text-sm font-medium">分析・調査</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="creation" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="creation">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">✍️</div>
+                                <div class="text-sm font-medium">コンテンツ<br>作成</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="coding" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="coding">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">💻</div>
+                                <div class="text-sm font-medium">コード開発</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="brainstorm" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="brainstorm">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">💡</div>
+                                <div class="text-sm font-medium">アイデア<br>出し</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="review" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="review">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">🔍</div>
+                                <div class="text-sm font-medium">レビュー<br>評価</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="troubleshoot" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="troubleshoot">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">🔧</div>
+                                <div class="text-sm font-medium">問題解決</div>
+                            </div>
+                        </label>
+                        
+                        <label class="cursor-pointer relative">
+                            <input type="radio" name="taskType" value="custom" class="sr-only peer">
+                            <div class="task-type-card p-2 border border-gray-200 rounded hover:border-blue-400 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all text-center" data-task-type="custom">
+                                <div class="recommended-badge hidden absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full text-xs">推奨</div>
+                                <div class="text-2xl mb-1">⚙️</div>
+                                <div class="text-sm font-medium">カスタム</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Task Details -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-xl" id="detailsIcon">📝</span> <span id="detailsTitle">タスクの詳細</span>
+                    </h3>
+                    
+                    <!-- Regular Task Form -->
+                    <div id="regularTaskForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 required-label">タスクのタイトル</label>
+                            <input type="text" id="taskTitle" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 required-field"
+                                   placeholder="タスクタイプを選択すると、適切な例が表示されます"
+                                   required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1 required-label">具体的なタスク内容</label>
+                            <textarea id="taskDescription" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32 required-field"
+                                      placeholder="タスクタイプを選択すると、適切な例が表示されます"
+                                      required></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">期待する成果物</label>
+                            <textarea id="expectedOutput" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
+                                      placeholder="タスクタイプを選択すると、適切な例が表示されます"
+                                      onchange="generatePrompt()"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">参考情報・コンテキスト</label>
+                            <textarea id="context" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="タスクタイプを選択すると、適切な例が表示されます"
+                                      onchange="generatePrompt()"></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Project Start Form -->
+                    <div id="projectStartForm" class="space-y-4 hidden">
+                        <!-- 必須項目の説明 -->
+                        <div class="required-notice">
+                            <strong>※ 必須項目</strong>：基本指示ビルダーでプロジェクト名とプロジェクトの目的・ゴールの設定が必要です
+                        </div>
+                        
+                        <!-- Examples Section -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <h4 class="font-medium text-blue-900 mb-2">💡 プロジェクト例</h4>
+                            <ul class="text-sm text-blue-800 space-y-1">
+                                <li>• <strong>受験対策</strong>: 志望校、現在の成績、苦手科目、予算など</li>
+                                <li>• <strong>住宅購入</strong>: 希望エリア、予算、家族構成、必須条件など</li>
+                                <li>• <strong>商品開発</strong>: ターゲット層、競合商品、予算、販売目標など</li>
+                                <li>• <strong>イベント企画</strong>: 規模、予算、対象者、会場条件など</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">期限・マイルストーン</label>
+                            <input type="text" id="projectDeadline" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="例: 来年3月の受験日まで、半年以内に購入、年末商戦に向けてなど"
+                                   onchange="generatePrompt()">
+                        </div>
+                        
+                        <div id="agentTasksSection" class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">エージェント別タスク</label>
+                            <div id="agentTasksList" class="space-y-2">
+                                <!-- Dynamically populated agent tasks -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">必要なリソース・準備</label>
+                            <textarea id="techRequirements" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: 参考書や問題集、不動産会社の選定、マーケティング予算、必要な人材など"
+                                      onchange="generatePrompt()"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">注意点・制約事項</label>
+                            <textarea id="projectConstraints" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: 予算の上限、実施期限、使用可能な時間、避けるべきリスクなど"
+                                      onchange="generatePrompt()"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">参考資料・リンク</label>
+                            <textarea id="projectReferences" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: デザインファイル: figma.com/..."
+                                      onchange="generatePrompt()"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Options -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-xl">⚙️</span> 追加オプション
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="includeBasicInstructions" class="mr-3 h-5 w-5" checked onchange="generatePrompt()">
+                                <div>
+                                    <span class="font-medium">基本指示を含める</span>
+                                    <span class="text-sm text-gray-500 block">プロジェクトの基本設定を参照する</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">優先度</label>
+                            <select id="priority" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" onchange="generatePrompt()">
+                                <option value="normal">通常</option>
+                                <option value="high">高（急ぎ）</option>
+                                <option value="low">低（時間がある時に）</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button onclick="generatePrompt()" 
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all font-medium shadow-md">
+                        🔄 プロンプトを再生成
+                    </button>
+                    <button onclick="saveTask()" 
+                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
+                        💾 保存
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Generated Prompt -->
+            <div class="sticky top-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg">🤖 生成されたプロンプト</h3>
+                        <button id="copyBtn" onclick="copyPrompt()" 
+                                class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                disabled>
+                            📋 コピー
+                        </button>
+                    </div>
+                    
+                    <div id="promptPreview" class="preview-box rounded-lg p-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+                        <p class="text-gray-500 text-center">タスク情報を入力すると、ここに最適化されたプロンプトが表示されます</p>
+                    </div>
+                    
+                    <!-- Dynamic Usage Guide -->
+                    <div id="usageGuideSection" class="mt-4 p-4 bg-blue-50 rounded-lg hidden">
+                        <h4 class="font-medium text-blue-900 mb-2">
+                            📌 このプロンプトの使い方
+                        </h4>
+                        <div id="usageGuide" class="text-sm text-blue-800">
+                            <!-- Dynamically populated based on task type -->
+                        </div>
+                    </div>
+                    
+                    <!-- Default Hint -->
+                    <div id="defaultHint" class="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            💡 <strong>ヒント:</strong> 生成されたプロンプトはClaudeやChatGPTに直接コピー＆ペーストできます
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State management
+        let taskData = {
+            type: '',
+            title: '',
+            description: '',
+            expectedOutput: '',
+            context: '',
+            priority: 'normal',
+            includeBasicInstructions: true
+        };
+
+        let basicInstructions = null;
+        
+        // Usage guides for each task type
+        const usageGuides = {
+            'project-plan': {
+                title: 'プロジェクト計画の使い方',
+                steps: [
+                    'Claudeプロジェクトで新しいチャットを開始',
+                    '生成されたプロンプトをそのまま送信',
+                    'Claudeが詳細なプロジェクト計画を作成',
+                    '生成された計画をドキュメント化して保存',
+                    '個別タスクはタスクジェネレーターで実行'
+                ],
+                tip: '💡 本格的なプロジェクト計画が必要な場合のみ使用してください。通常は基本指示＋タスクジェネレーターで十分です。'
+            },
+            'analysis': {
+                title: '分析タスクの使い方',
+                steps: [
+                    '既存または新規のチャットで使用',
+                    '生成されたプロンプトを送信',
+                    'Claudeが指定された分析を実行'
+                ],
+                tip: '💡 基本指示が設定されていれば、プロジェクトの文脈を保持したまま分析が行われます。'
+            },
+            'creation': {
+                title: 'コンテンツ作成タスクの使い方',
+                steps: [
+                    'チャットでプロンプトを送信',
+                    'Claudeが要件に沿ったコンテンツを作成',
+                    '必要に応じて修正を依頼'
+                ],
+                tip: '💡 基本指示で設定したトーンや形式が自動的に適用されます。'
+            },
+            'coding': {
+                title: 'コード開発タスクの使い方',
+                steps: [
+                    '開発環境の情報と共にプロンプトを送信',
+                    'Claudeがコードを生成',
+                    'コードをテストして必要に応じて調整'
+                ],
+                tip: '💡 基本指示で技術スタックを設定していれば、それに準拠したコードが生成されます。'
+            },
+            'brainstorm': {
+                title: 'アイデア出しタスクの使い方',
+                steps: [
+                    'プロンプトを送信してブレインストーミング開始',
+                    'Claudeが複数のアイデアを提案',
+                    '気に入ったアイデアを深掘り'
+                ],
+                tip: '💡 創造的な発想を促すため、制約は最小限に留めましょう。'
+            },
+            'review': {
+                title: 'レビュータスクの使い方',
+                steps: [
+                    'レビュー対象と共にプロンプトを送信',
+                    'Claudeが詳細なフィードバックを提供',
+                    '改善案に基づいて修正'
+                ],
+                tip: '💡 具体的な評価基準を含めることで、より有益なフィードバックが得られます。'
+            },
+            'custom': {
+                title: 'カスタムタスクの使い方',
+                steps: [
+                    'プロンプトを送信',
+                    'Claudeがタスクを実行',
+                    '結果を確認して必要に応じて調整'
+                ],
+                tip: '💡 特殊なタスクの場合は、具体例を含めると理解されやすくなります。'
+            },
+            'troubleshoot': {
+                title: '問題解決タスクの使い方',
+                steps: [
+                    'エラー内容や問題の詳細と共にプロンプトを送信',
+                    'Claudeが原因分析と解決策を提示',
+                    '提案された解決策を試して結果を確認',
+                    '必要に応じて追加の質問や調整を依頼'
+                ],
+                tip: '💡 エラーメッセージは省略せず、完全な形で提供すると、より正確な解決策が得られます。'
+            }
+        };
+
+        // Project type to task type mapping
+        const projectTaskMapping = {
+            'business': {
+                recommended: ['analysis', 'creation', 'troubleshoot'],
+                description: 'ビジネス系プロジェクト'
+            },
+            'creative': {
+                recommended: ['creation', 'brainstorm', 'review'],
+                description: 'クリエイティブ系プロジェクト'
+            },
+            'technical': {
+                recommended: ['troubleshoot', 'coding', 'analysis'],
+                description: '技術系プロジェクト'
+            },
+            'research': {
+                recommended: ['analysis', 'review', 'troubleshoot'],
+                description: '研究系プロジェクト'
+            },
+            'education': {
+                recommended: ['creation', 'analysis', 'brainstorm'],
+                description: '教育系プロジェクト'
+            },
+            'personal': {
+                recommended: ['brainstorm', 'creation', 'troubleshoot'],
+                description: '個人プロジェクト'
+            }
+        };
+
+        // Task type placeholders
+        const taskPlaceholders = {
+            'analysis': {
+                title: '例: 競合他社の価格戦略分析',
+                description: '例: 主要3社（A社、B社、C社）の過去1年間の価格戦略を分析し、市場での位置づけと今後の動向を予測。自社の価格戦略への提言をまとめる。',
+                expectedOutput: '例: 1. 競合3社の価格推移グラフ\n2. 価格戦略の比較表\n3. 市場動向分析レポート\n4. 自社への提言書（3つ以上の具体案）',
+                context: '例: 前四半期の売上データ、市場調査レポートのURL、業界レポート等'
+            },
+            'creation': {
+                title: '例: 新商品紹介ブログ記事作成',
+                description: '例: 20代女性向けの新スキンケア商品について、親しみやすく専門性のあるブログ記事を作成。SEOキーワード「敏感肌 スキンケア」を自然に含める。',
+                expectedOutput: '例: 1. ブログ記事（1500-2000文字）\n2. 記事タイトル案（3パターン）\n3. SNS投稿文（Twitter/Instagram）',
+                context: '例: 商品詳細資料、ターゲット層の詳細、ブランドガイドライン等'
+            },
+            'coding': {
+                title: '例: ユーザー認証機能の実装',
+                description: '例: Next.js 14でJWT認証を使用したログイン/ログアウト機能を実装。セキュリティベストプラクティスに従い、リフレッシュトークンも含める。',
+                expectedOutput: '例: 1. 認証関連のAPIエンドポイント\n2. 認証フック（useAuth）\n3. ミドルウェア設定\n4. 実装ドキュメント',
+                context: '例: 既存のプロジェクト構成、使用しているライブラリ一覧、データベーススキーマ等'
+            },
+            'brainstorm': {
+                title: '例: 新サービスのネーミング案',
+                description: '例: AI活用の英語学習アプリの名称を考案。覚えやすく、グローバル展開も視野に入れた名前を10案以上提案。',
+                expectedOutput: '例: 1. ネーミング案リスト（各案の説明付き）\n2. 商標調査の推奨事項\n3. ドメイン取得可能性の確認方法',
+                context: '例: サービスコンセプト、ターゲット層、競合サービス名、避けたい印象等'
+            },
+            'review': {
+                title: '例: APIドキュメントのレビュー',
+                description: '例: 新規開発したREST APIのドキュメントをレビュー。開発者視点での使いやすさ、情報の過不足、改善点を指摘。',
+                expectedOutput: '例: 1. レビュー結果サマリー\n2. 具体的な改善提案（優先度付き）\n3. 良い点のリスト\n4. 修正例の提示',
+                context: '例: APIドキュメントのURL、想定利用者、APIの目的、参考にしたい他社API等'
+            },
+            'custom': {
+                title: '例: 顧客満足度調査の設計',
+                description: '例: 四半期ごとの顧客満足度調査を設計。回答率を高める工夫と、前回調査との比較が可能な設問を含める。',
+                expectedOutput: '例: 1. 調査票（10-15問）\n2. 実施計画書\n3. 分析手法の提案',
+                context: '例: 前回調査結果、重点改善項目、調査予算、実施時期等'
+            },
+            'troubleshoot': {
+                title: '例: APIエラーの原因調査',
+                description: '例: REST APIで400 Bad Requestエラーが発生。POSTリクエスト時にJSONデータが正しく送信されているはずだが、サーバーがリクエストを拒否している。',
+                expectedOutput: '例: 1. エラーの原因分析\n2. 具体的な解決手順\n3. 修正後のコード例\n4. 今後の予防策',
+                context: '例: エラーメッセージ全文、APIドキュメント、送信しているコード、使用しているライブラリのバージョン等'
+            }
+        };
+
+        // Task type templates
+        const taskTemplates = {
+            'project-plan': {
+                name: 'プロジェクト計画',
+                icon: '📋',
+                template: '詳細なプロジェクト計画を策定してください',
+                structure: ['目標達成までのステップ', '重要な決定ポイント', '予想される課題と対策', 'スケジュール案', '成功の指標'],
+                isProjectPlan: true
+            },
+            analysis: {
+                name: '分析・調査',
+                icon: '📊',
+                template: '以下について詳細な分析を行ってください',
+                structure: ['現状分析', '課題抽出', '改善提案', '実行計画']
+            },
+            creation: {
+                name: 'コンテンツ作成',
+                icon: '✍️',
+                template: '以下の要件でコンテンツを作成してください',
+                structure: ['目的と対象読者', '主要メッセージ', '構成案', 'トーン設定']
+            },
+            coding: {
+                name: 'コード開発',
+                icon: '💻',
+                template: '以下の仕様でコードを実装してください',
+                structure: ['機能要件', '技術スタック', '実装方針', 'テスト計画']
+            },
+            brainstorm: {
+                name: 'アイデア出し',
+                icon: '💡',
+                template: '以下のテーマでアイデアを提案してください',
+                structure: ['背景と目的', '制約条件', 'アイデア基準', '期待する数']
+            },
+            review: {
+                name: 'レビュー・評価',
+                icon: '🔍',
+                template: '以下についてレビューとフィードバックをお願いします',
+                structure: ['レビュー対象', '評価観点', '改善提案', '優先順位']
+            },
+            custom: {
+                name: 'カスタム',
+                icon: '⚙️',
+                template: '以下のタスクを実行してください',
+                structure: ['タスク内容', '制約条件', '成果物', '期限']
+            },
+            troubleshoot: {
+                name: '問題解決',
+                icon: '🔧',
+                template: '以下の問題について原因分析と解決策を提示してください',
+                structure: ['問題の詳細', 'エラー内容', '試した対処法', '環境情報']
+            }
+        };
+
+        // Load basic instructions on page load
+        function loadBasicInstructions() {
+            try {
+                const savedData = localStorage.getItem('aiProjectBuilderData');
+                if (savedData) {
+                    basicInstructions = JSON.parse(savedData);
+                    
+                    // Show notice
+                    if (basicInstructions.projectName) {
+                        document.getElementById('basicInstructionsNotice').classList.remove('hidden');
+                        document.getElementById('loadedProjectName').textContent = basicInstructions.projectName;
+                        
+                        // Show project type info
+                        if (basicInstructions.projectType && projectTaskMapping[basicInstructions.projectType]) {
+                            const projectInfo = projectTaskMapping[basicInstructions.projectType];
+                            document.getElementById('projectTypeInfo').textContent = `プロジェクトタイプ: ${projectInfo.description}`;
+                            document.getElementById('recommendedTasksBadge').classList.remove('hidden');
+                            document.getElementById('projectTypeLabel').textContent = projectInfo.description;
+                            
+                            // Store for later use
+                            window.currentProjectType = basicInstructions.projectType;
+                        }
+                    }
+                    
+                    return true;
+                }
+            } catch (e) {
+                console.error('Failed to load basic instructions:', e);
+            }
+            return false;
+        }
+
+        // Update task type
+        function updateTaskType(type) {
+            taskData.type = type;
+            
+            // Toggle form visibility based on task type
+            const regularForm = document.getElementById('regularTaskForm');
+            const projectStartForm = document.getElementById('projectStartForm');
+            const detailsIcon = document.getElementById('detailsIcon');
+            const detailsTitle = document.getElementById('detailsTitle');
+            
+            if (type === 'project-plan') {
+                // Show project plan form
+                regularForm.classList.add('hidden');
+                projectStartForm.classList.remove('hidden');
+                detailsIcon.textContent = '📋';
+                detailsTitle.textContent = 'プロジェクト計画策定';
+                
+                // Load agents if available
+                loadAgentsForProjectStart();
+            } else {
+                // Show regular task form
+                regularForm.classList.remove('hidden');
+                projectStartForm.classList.add('hidden');
+                detailsIcon.textContent = '📝';
+                detailsTitle.textContent = 'タスクの詳細';
+                
+                // Update placeholders based on task type
+                if (taskPlaceholders[type]) {
+                    const placeholders = taskPlaceholders[type];
+                    document.getElementById('taskTitle').placeholder = placeholders.title;
+                    document.getElementById('taskDescription').placeholder = placeholders.description;
+                    document.getElementById('expectedOutput').placeholder = placeholders.expectedOutput;
+                    document.getElementById('context').placeholder = placeholders.context;
+                }
+            }
+            
+            generatePrompt();
+        }
+
+        // Generate optimized prompt
+        function generatePrompt() {
+            // Handle project plan type differently
+            if (taskData.type === 'project-plan') {
+                const prompt = generateProjectPlanPrompt();
+                document.getElementById('promptPreview').innerHTML = `<pre class="whitespace-pre-wrap font-mono text-sm">${escapeHtml(prompt)}</pre>`;
+                document.getElementById('copyBtn').disabled = false;
+                sessionStorage.setItem('generatedTaskPrompt', prompt);
+                return;
+            }
+            
+            // Update task data from form for regular tasks
+            taskData.title = document.getElementById('taskTitle').value;
+            taskData.description = document.getElementById('taskDescription').value;
+            taskData.expectedOutput = document.getElementById('expectedOutput').value;
+            taskData.context = document.getElementById('context').value;
+            taskData.priority = document.getElementById('priority').value;
+            taskData.includeBasicInstructions = document.getElementById('includeBasicInstructions').checked;
+
+            if (!taskData.type || !taskData.title || !taskData.description) {
+                return;
+            }
+
+            const template = taskTemplates[taskData.type] || taskTemplates.custom;
+            let prompt = '';
+
+            // Add priority indicator if high
+            if (taskData.priority === 'high') {
+                prompt += '🚨 **優先度: 高** - このタスクは緊急です\n\n';
+            }
+
+            // Add task header
+            prompt += `# ${template.icon} ${taskData.title}\n\n`;
+
+            // Add basic instructions reference if enabled
+            if (taskData.includeBasicInstructions && basicInstructions) {
+                prompt += `## プロジェクトコンテキスト\n`;
+                prompt += `このタスクは「**${basicInstructions.projectName}**」プロジェクトの一部です。\n`;
+                
+                // Add project type context
+                if (basicInstructions.projectType && projectTaskMapping[basicInstructions.projectType]) {
+                    const projectInfo = projectTaskMapping[basicInstructions.projectType];
+                    prompt += `プロジェクトタイプ: **${projectInfo.description}**\n`;
+                }
+                
+                if (basicInstructions.projectDescription) {
+                    prompt += `\n${basicInstructions.projectDescription}\n`;
+                }
+                
+                prompt += `\n基本的な役割とアプローチについては、既に設定されている指示に従ってください。\n\n`;
+            }
+
+            // Add task description
+            prompt += `## タスク内容\n`;
+            prompt += `${taskData.description}\n\n`;
+
+            // Add expected output if specified
+            if (taskData.expectedOutput) {
+                prompt += `## 期待する成果物\n`;
+                prompt += `${taskData.expectedOutput}\n\n`;
+            }
+
+            // Add context if provided
+            if (taskData.context) {
+                prompt += `## 参考情報・コンテキスト\n`;
+                prompt += `${taskData.context}\n\n`;
+            }
+
+            // Add task-specific structure
+            if (template.structure && template.structure.length > 0) {
+                prompt += `## 推奨アプローチ\n`;
+                prompt += `以下の観点を考慮してください：\n`;
+                template.structure.forEach((item, index) => {
+                    prompt += `${index + 1}. ${item}\n`;
+                });
+                prompt += '\n';
+            }
+
+            // Add priority-based instruction
+            if (taskData.priority === 'high') {
+                prompt += `## 注意事項\n`;
+                prompt += `- このタスクは優先度が高いため、迅速かつ正確な対応をお願いします\n`;
+                prompt += `- 不明な点があれば、すぐに確認してください\n\n`;
+            } else if (taskData.priority === 'low') {
+                prompt += `## 注意事項\n`;
+                prompt += `- このタスクは優先度が低いため、他の緊急タスクを優先してください\n`;
+                prompt += `- 時間をかけて丁寧に取り組んでください\n\n`;
+            }
+
+            // Add footer
+            prompt += `---\n`;
+            prompt += `生成日時: ${new Date().toLocaleString('ja-JP')}\n`;
+            if (basicInstructions && basicInstructions.multiAgent) {
+                prompt += `チームモード: ${basicInstructions.agents ? basicInstructions.agents.length : 0}名の専門家\n`;
+            }
+
+            // Display the generated prompt
+            document.getElementById('promptPreview').innerHTML = `<pre class="whitespace-pre-wrap font-mono text-sm">${escapeHtml(prompt)}</pre>`;
+            document.getElementById('copyBtn').disabled = false;
+
+            // Save to session
+            sessionStorage.setItem('generatedTaskPrompt', prompt);
+            
+            // Show usage guide
+            showUsageGuide(taskData.type);
+        }
+        
+        // Show usage guide based on task type
+        function showUsageGuide(taskType) {
+            const guide = usageGuides[taskType] || usageGuides.custom;
+            const guideSection = document.getElementById('usageGuideSection');
+            const guideContent = document.getElementById('usageGuide');
+            const defaultHint = document.getElementById('defaultHint');
+            
+            // Build guide HTML
+            let guideHTML = `<h5 class="font-medium mb-2">${guide.title}</h5>`;
+            guideHTML += '<ol class="list-decimal list-inside space-y-1 mb-3">';
+            guide.steps.forEach(step => {
+                guideHTML += `<li>${step}</li>`;
+            });
+            guideHTML += '</ol>';
+            if (guide.tip) {
+                guideHTML += `<p class="mt-3 text-amber-700 bg-amber-50 p-2 rounded">${guide.tip}</p>`;
+            }
+            
+            // Update content and show
+            guideContent.innerHTML = guideHTML;
+            guideSection.classList.remove('hidden');
+            defaultHint.classList.add('hidden');
+        }
+
+        // Copy prompt to clipboard
+        function copyPrompt() {
+            const prompt = sessionStorage.getItem('generatedTaskPrompt');
+            if (prompt) {
+                navigator.clipboard.writeText(prompt).then(() => {
+                    const btn = document.getElementById('copyBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ コピー済み';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            }
+        }
+
+        // Save task
+        function saveTask() {
+            if (!taskData.title || !taskData.description) {
+                alert('タスクのタイトルと内容を入力してください。');
+                return;
+            }
+
+            try {
+                // Get existing tasks
+                let tasks = JSON.parse(localStorage.getItem('aiProjectBuilderTasks') || '[]');
+                
+                // Add new task
+                const newTask = {
+                    id: `task-${Date.now()}`,
+                    projectId: basicInstructions ? basicInstructions.projectName : 'unknown',
+                    ...taskData,
+                    prompt: sessionStorage.getItem('generatedTaskPrompt') || '',
+                    created: new Date().toISOString()
+                };
+                
+                tasks.push(newTask);
+                
+                // Save to localStorage
+                localStorage.setItem('aiProjectBuilderTasks', JSON.stringify(tasks));
+                
+                alert('タスクを保存しました！');
+            } catch (e) {
+                alert('保存に失敗しました: ' + e.message);
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load agents for project start mode
+        function loadAgentsForProjectStart() {
+            if (!basicInstructions || !basicInstructions.agents || basicInstructions.agents.length === 0) {
+                document.getElementById('agentTasksSection').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('agentTasksSection').classList.remove('hidden');
+            const agentTasksList = document.getElementById('agentTasksList');
+            agentTasksList.innerHTML = '';
+            
+            basicInstructions.agents.forEach((agent, index) => {
+                const agentDiv = document.createElement('div');
+                agentDiv.className = 'p-3 bg-gray-50 rounded-lg';
+                agentDiv.innerHTML = `
+                    <h5 class="font-medium text-sm text-gray-700 mb-1">${agent.icon || '👤'} ${agent.name || 'エージェント'}</h5>
+                    <p class="text-xs text-gray-500 mb-2">${agent.role || ''}</p>
+                    <textarea 
+                        id="agentTask-${index}" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="このエージェントに依頼する初期タスクを入力..."
+                                            ></textarea>
+                `;
+                agentTasksList.appendChild(agentDiv);
+            });
+        }
+
+        // Generate project plan prompt
+        function generateProjectPlanPrompt() {
+            const projectName = basicInstructions?.projectName || 'プロジェクト';
+            const projectDescription = basicInstructions?.projectDescription || '';
+            const projectGoals = basicInstructions?.projectGoals || '';
+            const projectType = basicInstructions?.projectType || '';
+            const deadline = document.getElementById('projectDeadline').value;
+            const techRequirements = document.getElementById('techRequirements').value;
+            const constraints = document.getElementById('projectConstraints').value;
+            const references = document.getElementById('projectReferences').value;
+            
+            let prompt = `# 📋 ${projectName} - プロジェクト計画策定\n\n`;
+            
+            prompt += `## 目的\n`;
+            prompt += `このプロジェクトの詳細な実行計画を策定してください。以下の観点から包括的な計画を作成し、実行可能なタスクリストとスケジュールを提示してください。\n\n`;
+            
+            // Add project type specific guidance
+            if (projectType) {
+                const projectTypePlanningGuides = {
+                    business: 'ビジネス成果への影響、ROI、リスク管理を特に重視して計画してください。',
+                    creative: '創造的プロセス、インスピレーション源、品質管理を重視して計画してください。',
+                    technical: '技術的課題、アーキテクチャ設計、テスト計画を重視して計画してください。',
+                    research: '調査方法論、データ収集計画、分析手法を重視して計画してください。',
+                    personal: '個人の目標、利用可能な時間、ライフスタイルを考慮して計画してください。',
+                    custom: 'プロジェクトの特殊性を考慮して柔軟に計画してください。'
+                };
+                
+                const planningGuide = projectTypePlanningGuides[projectType];
+                if (planningGuide) {
+                    prompt += `**プロジェクトタイプに応じた注意点**: ${planningGuide}\n\n`;
+                }
+            }
+            
+            if (projectDescription) {
+                prompt += `## プロジェクト概要\n${projectDescription}\n\n`;
+            }
+            
+            if (projectGoals) {
+                prompt += `## 目標・ゴール\n${projectGoals}\n\n`;
+            }
+            
+            if (deadline) {
+                prompt += `## 期限・マイルストーン\n${deadline}\n\n`;
+            }
+            
+            // Add team composition if agents exist
+            if (basicInstructions?.agents && basicInstructions.agents.length > 0) {
+                prompt += `## チーム構成とタスク割り当て\n\n`;
+                basicInstructions.agents.forEach((agent, index) => {
+                    const taskElement = document.getElementById(`agentTask-${index}`);
+                    const task = taskElement ? taskElement.value : '';
+                    
+                    if (task) {
+                        prompt += `### ${agent.icon || '👤'} ${agent.name}\n`;
+                        prompt += `**専門分野**: ${agent.role}\n`;
+                        prompt += `**担当タスク**: ${task}\n\n`;
+                    }
+                });
+            }
+            
+            // Add additional information
+            if (techRequirements || constraints || references) {
+                prompt += `## 追加情報\n\n`;
+                if (techRequirements) {
+                    prompt += `**必要なリソース・準備**: ${techRequirements}\n\n`;
+                }
+                if (constraints) {
+                    prompt += `**注意点・制約事項**: ${constraints}\n\n`;
+                }
+                if (references) {
+                    prompt += `**参考資料**: ${references}\n\n`;
+                }
+            }
+            
+            prompt += `## 期待する成果物\n\n`;
+            prompt += `以下の内容を含む実行可能なプロジェクト計画を作成してください：\n\n`;
+            prompt += `1. **ステップバイステップの行動計画**: 目標達成までの具体的な手順\n`;
+            prompt += `2. **実行タスクリスト**: すぐに始められる具体的なアクション（優先度付き）\n`;
+            prompt += `3. **重要な決定ポイント**: いつ何を決める必要があるか\n`;
+            prompt += `4. **リスクと対策**: 想定される問題と予防・対処法\n`;
+            prompt += `5. **チェックポイント**: 進捗確認のタイミングと方法\n`;
+            prompt += `6. **スケジュール案**: 現実的な期限設定（バッファ含む）\n\n`;
+            prompt += `計画は誰でも理解でき、すぐに行動に移せる具体的な内容にしてください。`;
+            
+            return prompt;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBasicInstructions();
+            
+            // Add event listeners to task type radio buttons
+            document.querySelectorAll('input[name="taskType"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateTaskType(this.value);
+                });
+            });
+            
+            // Add event listeners for form fields
+            const formFields = ['taskTitle', 'taskDescription', 'expectedOutput', 'context', 
+                               'projectDeadline', 'techRequirements', 'projectConstraints', 
+                               'projectReferences', 'includeBasicInstructions', 'priority'];
+            
+            formFields.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    element.addEventListener(element.type === 'checkbox' ? 'change' : 'input', generatePrompt);
+                }
+            });
+            
+            // Highlight recommended tasks based on project type
+            if (window.currentProjectType && projectTaskMapping[window.currentProjectType]) {
+                const recommendedTasks = projectTaskMapping[window.currentProjectType].recommended;
+                recommendedTasks.forEach(taskType => {
+                    const taskCard = document.querySelector(`[data-task-type="${taskType}"]`);
+                    if (taskCard) {
+                        const badge = taskCard.querySelector('.recommended-badge');
+                        if (badge) {
+                            badge.classList.remove('hidden');
+                        }
+                        // Add subtle highlight
+                        taskCard.classList.add('ring-2', 'ring-green-200');
+                    }
+                });
+            }
+            
+            // Check URL parameters for mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            
+            if (mode === 'project-start' || mode === 'project-plan') {
+                // Auto-select project plan type (supporting old URL for compatibility)
+                document.querySelector('input[name="taskType"][value="project-plan"]').checked = true;
+                updateTaskType('project-plan');
+            }
+        });
+    </script>
+</body>
+</html>

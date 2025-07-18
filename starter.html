@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project スタータープロンプトビルダー</title>
+    <script>
+        // Redirect to prompt-generator.html with project-plan mode
+        window.location.replace('prompt-generator.html?mode=project-plan');
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1200px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Fallback content in case redirect fails -->
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="text-center p-8">
+            <h1 class="text-2xl font-bold mb-4">リダイレクト中...</h1>
+            <p class="text-gray-600 mb-4">自動的にプロンプトジェネレーターに移動します。</p>
+            <p class="text-gray-600">移動しない場合は、<a href="prompt-generator.html?mode=project-start" class="text-blue-600 hover:underline">こちらをクリック</a>してください。</p>
+        </div>
+    </div>
+    
+    <!-- Original content (hidden) -->
+    <div style="display: none;">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold">🚀 AI Project スタータープロンプトビルダー</h1>
+                    <p class="text-sm opacity-90 mt-1">AIチャットを開始する際の、構造化されたプロンプトを簡単に作成</p>
+                </div>
+                <a href="index.html" class="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-colors font-medium">
+                    ← 基本指示ビルダーへ
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Left Column: Form -->
+            <div class="space-y-6">
+                <!-- Mode Toggle -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div id="basicInstructionsNotice" class="hidden mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
+                        <p class="text-sm text-green-800 font-medium">✅ 基本指示ビルダーの設定が見つかりました</p>
+                    </div>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" id="useBasicInstructions" class="mr-3 h-5 w-5" onchange="toggleMode()">
+                        <div>
+                            <span class="font-medium">基本指示の設定を使用</span>
+                            <span class="text-sm text-gray-500 block">（基本指示ビルダーの設定を引き継ぐ）</span>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Project Details -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-xl">📋</span> プロジェクト詳細
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">プロジェクト名 *</label>
+                            <input type="text" id="projectName" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="例: ECサイトのリニューアル">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">プロジェクトの目的・ゴール *</label>
+                            <textarea id="projectGoal" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
+                                      placeholder="例: 既存のECサイトをモダンな技術スタックでリニューアルし、ユーザビリティとパフォーマンスを向上させる"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">期限・マイルストーン</label>
+                            <input type="text" id="deadline" 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="例: 3ヶ月後にベータ版リリース">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agent Tasks / Roles -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-xl">👥</span> <span id="rolesSectionTitle">エージェント別タスク</span>
+                    </h3>
+                    
+                    <div id="agentTasksContainer" class="space-y-3">
+                        <!-- Dynamically populated -->
+                    </div>
+                    
+                    <div id="standaloneRolesContainer" class="hidden space-y-3">
+                        <!-- Standalone roles -->
+                    </div>
+                    
+                    <button id="addRoleBtn" onclick="addStandaloneRole()" 
+                            class="hidden mt-4 w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors">
+                        + 役割を追加
+                    </button>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <span class="text-xl">📝</span> 追加情報
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">技術要件</label>
+                            <textarea id="techRequirements" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: React, TypeScript, Next.js 14, Tailwind CSS"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">制約条件</label>
+                            <textarea id="constraints" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: 既存DBとの互換性維持、特定のフレームワーク使用必須など"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">参考資料・リンク</label>
+                            <textarea id="references" 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20"
+                                      placeholder="例: デザインファイル: figma.com/..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button onclick="generatePrompt()" 
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all font-medium shadow-md">
+                        🚀 プロンプトを生成
+                    </button>
+                    <button onclick="saveConfiguration()" 
+                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
+                        💾 保存
+                    </button>
+                    <button onclick="loadConfiguration()" 
+                            class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium">
+                        📂 読込
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Preview -->
+            <div class="sticky top-8">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-lg">📄 生成されたプロンプト</h3>
+                        <button id="copyBtn" onclick="copyPrompt()" 
+                                class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                disabled>
+                            📋 コピー
+                        </button>
+                    </div>
+                    
+                    <div id="promptPreview" class="bg-gray-50 rounded-lg p-4 min-h-[400px] max-h-[600px] overflow-y-auto">
+                        <p class="text-gray-500 text-center">プロンプトを生成するには、左側のフォームに入力してください</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configuration data
+        let config = {
+            useBasicInstructions: false,
+            project: {
+                name: '',
+                goal: '',
+                deadline: ''
+            },
+            agents: [],
+            standaloneRoles: [],
+            additional: {
+                techRequirements: '',
+                constraints: '',
+                references: ''
+            }
+        };
+
+        let standaloneRoleCounter = 0;
+
+        // Load basic instructions from localStorage if available
+        function loadBasicInstructions() {
+            console.log('=== Loading Basic Instructions ===');
+            console.log('Current origin:', window.location.origin);
+            
+            const savedData = localStorage.getItem('aiProjectBuilderData');
+            console.log('Raw saved data exists:', savedData !== null);
+            
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    console.log('Parsed data structure:', {
+                        projectName: data.projectName,
+                        multiAgent: data.multiAgent,
+                        agentsCount: data.agents ? data.agents.length : 0,
+                        agents: data.agents
+                    });
+                    
+                    // 基本設定を読み込む
+                    // データ構造をデバッグ
+                    console.log('Full data structure:', data);
+                    
+                    // projectDetailsからプロジェクト名を確認
+                    const hasProjectName = data.projectDetails?.projectName || data.projectName;
+                    const hasAgents = data.agents && data.agents.length > 0;
+                    const isMultiAgent = data.multiAgent === true;
+                    
+                    // プロジェクト詳細情報を保存
+                    if (data.projectName || data.projectDescription || data.projectGoals || data.projectDeadline) {
+                        window.basicProjectData = {
+                            name: data.projectName || '',
+                            description: data.projectDescription || '',
+                            goals: data.projectGoals || '',
+                            deadline: data.projectDeadline || ''
+                        };
+                        console.log('Project data saved:', window.basicProjectData);
+                    }
+                    
+                    if (hasProjectName || hasAgents || data.role) {
+                        console.log('Basic settings found, loading data...');
+                        console.log('Multi-agent mode:', isMultiAgent);
+                        
+                        // マルチエージェントモードの場合
+                        if (isMultiAgent && hasAgents) {
+                            config.agents = data.agents.map(agent => ({
+                                icon: agent.icon || '👤',
+                                name: agent.name || '',
+                                role: agent.role || '',
+                                specialties: agent.specialties || '',
+                                task: ''
+                            }));
+                            console.log('Loaded multiple agents:', config.agents);
+                        } 
+                        // シングルエージェントモードの場合
+                        else if (!isMultiAgent && data.selectedAgent) {
+                            // selectedAgentの情報を1つのエージェントとして設定
+                            config.agents = [{
+                                icon: data.selectedAgent.icon || '👤',
+                                name: data.selectedAgent.name || '',
+                                role: data.selectedAgent.role || '',
+                                specialties: data.selectedAgent.specialties || '',
+                                task: ''
+                            }];
+                            console.log('Loaded single agent:', config.agents);
+                        }
+                        // 後方互換性のため（role情報がある場合）
+                        else if (data.role) {
+                            config.agents = [{
+                                icon: '👤',
+                                name: data.role,
+                                role: data.role,
+                                specialties: '',
+                                task: ''
+                            }];
+                            console.log('Loaded agent from role field:', config.agents);
+                        }
+                        
+                        return true;
+                    } else {
+                        console.log('No basic settings found');
+                        console.log('Checked fields:', {
+                            'data.projectDetails?.projectName': data.projectDetails?.projectName,
+                            'data.projectName': data.projectName,
+                            'data.agents': data.agents,
+                            'data.role': data.role
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to parse saved data:', e);
+                    console.error('Saved data:', savedData);
+                }
+            } else {
+                console.log('No saved data in localStorage');
+                console.log('Available localStorage keys:', Object.keys(localStorage));
+            }
+            
+            console.log('=== End Loading Basic Instructions ===');
+            return false;
+        }
+
+        // Toggle between basic instructions and standalone mode
+        function toggleMode() {
+            const useBasic = document.getElementById('useBasicInstructions').checked;
+            config.useBasicInstructions = useBasic;
+            
+            const agentContainer = document.getElementById('agentTasksContainer');
+            const standaloneContainer = document.getElementById('standaloneRolesContainer');
+            const addRoleBtn = document.getElementById('addRoleBtn');
+            const sectionTitle = document.getElementById('rolesSectionTitle');
+            
+            if (useBasic) {
+                // Check if agents are already loaded in config
+                if (config.agents && config.agents.length > 0) {
+                    console.log('Using already loaded agents:', config.agents);
+                    agentContainer.classList.remove('hidden');
+                    standaloneContainer.classList.add('hidden');
+                    addRoleBtn.classList.add('hidden');
+                    sectionTitle.textContent = 'エージェント別タスク';
+                    renderAgentTasks();
+                } else {
+                    // Try to load if not already loaded
+                    if (loadBasicInstructions()) {
+                        agentContainer.classList.remove('hidden');
+                        standaloneContainer.classList.add('hidden');
+                        addRoleBtn.classList.add('hidden');
+                        sectionTitle.textContent = 'エージェント別タスク';
+                        renderAgentTasks();
+                    } else {
+                        alert('基本指示が設定されていません。先に基本指示ビルダーでエージェントを設定してください。');
+                        document.getElementById('useBasicInstructions').checked = false;
+                        config.useBasicInstructions = false;
+                    }
+                }
+            } else {
+                // Standalone mode
+                agentContainer.classList.add('hidden');
+                standaloneContainer.classList.remove('hidden');
+                addRoleBtn.classList.remove('hidden');
+                sectionTitle.textContent = '役割とタスク';
+                
+                // Add initial role if none exist
+                if (config.standaloneRoles.length === 0) {
+                    addStandaloneRole();
+                }
+            }
+        }
+
+        // Render agent tasks for basic instructions mode
+        function renderAgentTasks() {
+            const container = document.getElementById('agentTasksContainer');
+            container.innerHTML = config.agents.map((agent, index) => `
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h5 class="font-medium text-gray-700 mb-2">${agent.icon} ${agent.name}</h5>
+                    <p class="text-xs text-gray-500 mb-2">${agent.role}</p>
+                    <textarea 
+                        id="agentTask-${index}" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="このエージェントに依頼する具体的なタスクを入力..."
+                        onchange="updateAgentTask(${index}, this.value)"
+                    >${agent.task || ''}</textarea>
+                </div>
+            `).join('');
+        }
+
+        // Update agent task
+        function updateAgentTask(index, task) {
+            if (config.agents[index]) {
+                config.agents[index].task = task;
+            }
+        }
+
+        // Add standalone role
+        function addStandaloneRole() {
+            const roleId = standaloneRoleCounter++;
+            const role = {
+                id: roleId,
+                name: '',
+                role: '',
+                task: ''
+            };
+            
+            config.standaloneRoles.push(role);
+            
+            const container = document.getElementById('standaloneRolesContainer');
+            const roleDiv = document.createElement('div');
+            roleDiv.id = `role-${roleId}`;
+            roleDiv.className = 'p-4 bg-gray-50 rounded-lg relative';
+            roleDiv.innerHTML = `
+                <button onclick="removeStandaloneRole(${roleId})" 
+                        class="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                    ✕
+                </button>
+                <div class="space-y-3">
+                    <input type="text" 
+                           placeholder="役割名（例: フロントエンド開発者）" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                           onchange="updateStandaloneRole(${roleId}, 'name', this.value)">
+                    <input type="text" 
+                           placeholder="専門分野（例: React, TypeScript, UI/UX）" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                           onchange="updateStandaloneRole(${roleId}, 'role', this.value)">
+                    <textarea 
+                           placeholder="担当タスク" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm h-20"
+                           onchange="updateStandaloneRole(${roleId}, 'task', this.value)"></textarea>
+                </div>
+            `;
+            
+            container.appendChild(roleDiv);
+        }
+
+        // Update standalone role
+        function updateStandaloneRole(roleId, field, value) {
+            const role = config.standaloneRoles.find(r => r.id === roleId);
+            if (role) {
+                role[field] = value;
+            }
+        }
+
+        // Remove standalone role
+        function removeStandaloneRole(roleId) {
+            config.standaloneRoles = config.standaloneRoles.filter(r => r.id !== roleId);
+            document.getElementById(`role-${roleId}`).remove();
+        }
+
+        // Generate prompt
+        function generatePrompt() {
+            // Update config with form values
+            config.project.name = document.getElementById('projectName').value;
+            config.project.goal = document.getElementById('projectGoal').value;
+            config.project.deadline = document.getElementById('deadline').value;
+            config.additional.techRequirements = document.getElementById('techRequirements').value;
+            config.additional.constraints = document.getElementById('constraints').value;
+            config.additional.references = document.getElementById('references').value;
+            
+            if (!config.project.name || !config.project.goal) {
+                alert('プロジェクト名と目的は必須です。');
+                return;
+            }
+            
+            let prompt = `# 🚀 ${config.project.name} - プロジェクト開始\n\n`;
+            prompt += `## プロジェクト概要\n`;
+            prompt += `**目的・ゴール**: ${config.project.goal}\n`;
+            if (config.project.deadline) {
+                prompt += `**期限**: ${config.project.deadline}\n`;
+            }
+            prompt += `\n`;
+            
+            // Add roles and tasks
+            if (config.useBasicInstructions && config.agents.length > 0) {
+                prompt += `## チーム構成とタスク割り当て\n\n`;
+                config.agents.forEach(agent => {
+                    if (agent.task) {
+                        prompt += `### ${agent.icon} ${agent.name}\n`;
+                        prompt += `**専門分野**: ${agent.role}\n`;
+                        prompt += `**担当タスク**: ${agent.task}\n\n`;
+                    }
+                });
+            } else if (config.standaloneRoles.length > 0) {
+                prompt += `## 必要な役割とタスク\n\n`;
+                config.standaloneRoles.forEach(role => {
+                    if (role.name && role.task) {
+                        prompt += `### ${role.name}\n`;
+                        if (role.role) {
+                            prompt += `**専門分野**: ${role.role}\n`;
+                        }
+                        prompt += `**担当タスク**: ${role.task}\n\n`;
+                    }
+                });
+            }
+            
+            // Add additional information
+            if (config.additional.techRequirements || config.additional.constraints || config.additional.references) {
+                prompt += `## 追加情報\n\n`;
+                if (config.additional.techRequirements) {
+                    prompt += `**技術要件**: ${config.additional.techRequirements}\n\n`;
+                }
+                if (config.additional.constraints) {
+                    prompt += `**制約条件**: ${config.additional.constraints}\n\n`;
+                }
+                if (config.additional.references) {
+                    prompt += `**参考資料**: ${config.additional.references}\n\n`;
+                }
+            }
+            
+            prompt += `## 開始指示\n\n`;
+            prompt += `上記のプロジェクトを開始します。各担当者は割り当てられたタスクに基づいて作業を進めてください。進捗は定期的に共有し、必要に応じて調整を行います。\n\n`;
+            prompt += `まずは全体の計画とアプローチについて検討を始めましょう。`;
+            
+            // Display prompt
+            document.getElementById('promptPreview').innerHTML = `<pre class="whitespace-pre-wrap font-mono text-sm">${escapeHtml(prompt)}</pre>`;
+            document.getElementById('copyBtn').disabled = false;
+            
+            // Save to session
+            sessionStorage.setItem('generatedPrompt', prompt);
+        }
+
+        // Copy prompt to clipboard
+        function copyPrompt() {
+            const prompt = sessionStorage.getItem('generatedPrompt');
+            if (prompt) {
+                navigator.clipboard.writeText(prompt).then(() => {
+                    const btn = document.getElementById('copyBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ コピー済み';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            }
+        }
+
+        // Save configuration
+        function saveConfiguration() {
+            // Update config with current form values
+            config.project.name = document.getElementById('projectName').value;
+            config.project.goal = document.getElementById('projectGoal').value;
+            config.project.deadline = document.getElementById('deadline').value;
+            config.additional.techRequirements = document.getElementById('techRequirements').value;
+            config.additional.constraints = document.getElementById('constraints').value;
+            config.additional.references = document.getElementById('references').value;
+            
+            localStorage.setItem('starterPromptConfig', JSON.stringify(config));
+            alert('設定を保存しました！');
+        }
+
+        // Load configuration
+        function loadConfiguration() {
+            const saved = localStorage.getItem('starterPromptConfig');
+            if (saved) {
+                try {
+                    config = JSON.parse(saved);
+                    
+                    // Restore form values
+                    document.getElementById('useBasicInstructions').checked = config.useBasicInstructions;
+                    document.getElementById('projectName').value = config.project.name || '';
+                    document.getElementById('projectGoal').value = config.project.goal || '';
+                    document.getElementById('deadline').value = config.project.deadline || '';
+                    document.getElementById('techRequirements').value = config.additional.techRequirements || '';
+                    document.getElementById('constraints').value = config.additional.constraints || '';
+                    document.getElementById('references').value = config.additional.references || '';
+                    
+                    // Restore roles/agents
+                    toggleMode();
+                    
+                    alert('設定を読み込みました！');
+                } catch (e) {
+                    alert('設定の読み込みに失敗しました。');
+                    console.error(e);
+                }
+            } else {
+                alert('保存された設定がありません。');
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if coming from builder
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromBuilder = urlParams.get('from') === 'builder';
+            
+            // Check if basic instructions are available
+            const hasBasicInstructions = loadBasicInstructions();
+            
+            if (hasBasicInstructions || fromBuilder) {
+                // 基本指示が存在する場合、またはビルダーから来た場合は自動的にチェックを入れる
+                document.getElementById('useBasicInstructions').checked = true;
+                config.useBasicInstructions = true;
+                
+                if (hasBasicInstructions) {
+                    // 通知を表示
+                    document.getElementById('basicInstructionsNotice').classList.remove('hidden');
+                    console.log('Basic instructions found, auto-checking the checkbox');
+                    console.log('Loaded agents in initialization:', config.agents);
+                    
+                    // プロジェクト詳細情報を自動入力
+                    if (window.basicProjectData) {
+                        document.getElementById('projectName').value = window.basicProjectData.name || '';
+                        document.getElementById('projectGoal').value = window.basicProjectData.goals || '';
+                        document.getElementById('deadline').value = window.basicProjectData.deadline || '';
+                        
+                        // configオブジェクトにも保存
+                        config.project.name = window.basicProjectData.name || '';
+                        config.project.goal = window.basicProjectData.goals || '';
+                        config.project.deadline = window.basicProjectData.deadline || '';
+                        
+                        console.log('Project details auto-filled from basic instructions');
+                    }
+                }
+            }
+            
+            toggleMode();
+        });
+    </script>
+</body>
+</html>
