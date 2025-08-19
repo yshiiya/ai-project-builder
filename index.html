@@ -528,6 +528,9 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-medium text-gray-900">生成された基本指示</h3>
                         <div class="flex gap-1 md:gap-2">
+                            <button onclick="showTemplateLibrary()" class="flex items-center px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 text-xs md:text-sm">
+                                📚 テンプレート
+                            </button>
                             <button onclick="showPromptHistory()" class="flex items-center px-2 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 bg-purple-100 text-purple-700 border border-purple-200 hover:bg-purple-200 text-xs md:text-sm">
                                 📜 履歴
                             </button>
@@ -702,6 +705,156 @@
         </div>
     </div>
 
+    <!-- Template Library Modal -->
+    <div id="templateLibraryModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 md:p-6 max-w-6xl w-full mx-2 md:mx-4 max-h-[90vh] md:max-h-[80vh] overflow-hidden flex flex-col">
+            <div class="flex items-center justify-between mb-4 border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-900">📚 テンプレートライブラリ</h3>
+                <button onclick="closeTemplateLibrary()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row flex-1 gap-4 overflow-hidden">
+                <!-- サイドバー: カテゴリ & 新規作成 -->
+                <div class="md:w-64 flex-shrink-0">
+                    <button onclick="showCreateTemplate()" class="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors mb-4 flex items-center justify-center gap-2">
+                        <span>➕</span>
+                        <span>新規テンプレート</span>
+                    </button>
+                    
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <h4 class="font-semibold text-sm text-gray-700 mb-2">カテゴリ</h4>
+                        <div class="space-y-1">
+                            <button onclick="filterTemplatesByCategory('all')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors bg-white font-medium">
+                                🌐 すべて
+                            </button>
+                            <button onclick="filterTemplatesByCategory('development')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors">
+                                💻 開発
+                            </button>
+                            <button onclick="filterTemplatesByCategory('business')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors">
+                                📊 ビジネス
+                            </button>
+                            <button onclick="filterTemplatesByCategory('creative')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors">
+                                🎨 クリエイティブ
+                            </button>
+                            <button onclick="filterTemplatesByCategory('education')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors">
+                                📚 教育
+                            </button>
+                            <button onclick="filterTemplatesByCategory('analysis')" class="category-btn w-full text-left px-3 py-2 rounded hover:bg-white text-sm transition-colors">
+                                📈 分析
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- メインエリア: テンプレート一覧 -->
+                <div class="flex-1 overflow-hidden flex flex-col">
+                    <!-- 検索バー -->
+                    <div class="mb-4 flex gap-2">
+                        <input type="text" id="templateSearch" placeholder="テンプレートを検索..." 
+                               class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                               onkeyup="searchTemplates()">
+                        <select id="templateSort" onchange="sortTemplates()" class="px-4 py-2 border rounded-lg">
+                            <option value="recent">最近使用</option>
+                            <option value="name">名前順</option>
+                            <option value="category">カテゴリ順</option>
+                        </select>
+                    </div>
+                    
+                    <!-- テンプレートグリッド -->
+                    <div id="templateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-1 pr-2">
+                        <!-- テンプレートカードがここに動的に追加されます -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Create/Edit Modal -->
+    <div id="templateEditModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-[60]">
+        <div class="bg-white rounded-lg p-4 md:p-6 max-w-4xl w-full mx-2 md:mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="templateEditTitle" class="text-xl font-bold text-gray-900">新規テンプレート作成</h3>
+                <button onclick="closeTemplateEdit()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">テンプレート名 *</label>
+                    <input type="text" id="templateName" placeholder="例: React開発環境構築" 
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">説明</label>
+                    <textarea id="templateDescription" rows="2" placeholder="このテンプレートの用途を説明..."
+                              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">カテゴリ *</label>
+                    <select id="templateCategory" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                        <option value="development">💻 開発</option>
+                        <option value="business">📊 ビジネス</option>
+                        <option value="creative">🎨 クリエイティブ</option>
+                        <option value="education">📚 教育</option>
+                        <option value="analysis">📈 分析</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">推奨AIモデル</label>
+                    <div class="flex gap-2 flex-wrap">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="claude" class="ai-model-checkbox rounded">
+                            <span class="ml-2">Claude</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="chatgpt" class="ai-model-checkbox rounded">
+                            <span class="ml-2">ChatGPT</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="gemini" class="ai-model-checkbox rounded">
+                            <span class="ml-2">Gemini</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" value="perplexity" class="ai-model-checkbox rounded">
+                            <span class="ml-2">Perplexity</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        テンプレート内容 *
+                        <span class="text-xs text-gray-500 ml-2">変数は {{変数名}} の形式で記述</span>
+                    </label>
+                    <textarea id="templateContent" rows="10" 
+                              placeholder="例: {{会社名}}の{{部署}}で働く{{役職}}として..."
+                              class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 font-mono text-sm"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">タグ（カンマ区切り）</label>
+                    <input type="text" id="templateTags" placeholder="例: React, 環境構築, フロントエンド" 
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                </div>
+            </div>
+            
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="closeTemplateEdit()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    キャンセル
+                </button>
+                <button onclick="saveTemplate()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Prompt History Modal -->
     <div id="promptHistoryModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50">
         <div class="bg-white rounded-lg p-4 md:p-6 max-w-4xl w-full mx-2 md:mx-4 max-h-[90vh] md:max-h-[80vh] overflow-hidden flex flex-col">
@@ -732,6 +885,10 @@
     <script>
         // State management
         let promptHistory = []; // プロンプト履歴を保存する配列
+        let promptTemplates = []; // テンプレートライブラリ
+        let currentEditingTemplate = null; // 編集中のテンプレートID
+        let currentCategory = 'all'; // 現在選択されているカテゴリ
+        
         let formData = {
             projectName: '',
             projectType: '',
@@ -1030,6 +1187,15 @@
                     formData = { ...formData, ...data };
                     restoreFormValues();
                     console.log('Data loaded from localStorage');
+                }
+                
+                // テンプレートも読み込む
+                const savedTemplates = localStorage.getItem('promptTemplates');
+                if (savedTemplates) {
+                    promptTemplates = JSON.parse(savedTemplates);
+                } else {
+                    // 初回起動時はサンプルテンプレートを初期化
+                    initializeSampleTemplates();
                 }
             } catch (e) {
                 console.error('Failed to load from localStorage:', e);
@@ -1900,6 +2066,399 @@ ${formData.customizations}` : ''}`;
             if (promptHistory.length > 50) {
                 promptHistory = promptHistory.slice(0, 50);
             }
+        }
+        
+        // ========== Template Library Functions ==========
+        
+        function initializeSampleTemplates() {
+            // 初回起動時にサンプルテンプレートを追加
+            if (promptTemplates.length === 0) {
+                const sampleTemplates = [
+                    {
+                        id: Date.now(),
+                        name: 'React開発環境構築',
+                        description: 'Reactプロジェクトの初期設定と環境構築を支援',
+                        category: 'development',
+                        aiModels: ['claude', 'chatgpt'],
+                        content: '{{プロジェクト名}}のReactアプリケーションを作成します。\n\n要件:\n- TypeScript対応\n- {{UIライブラリ}}を使用\n- {{状態管理}}による状態管理\n- テスト環境の構築\n\n期限: {{納期}}\n\n詳細な手順とベストプラクティスを含めて説明してください。',
+                        tags: ['React', 'TypeScript', '環境構築'],
+                        createdAt: Date.now(),
+                        lastUsed: null,
+                        useCount: 0
+                    },
+                    {
+                        id: Date.now() + 1,
+                        name: '市場分析レポート作成',
+                        description: '特定市場の分析レポートを作成',
+                        category: 'business',
+                        aiModels: ['claude', 'perplexity'],
+                        content: '{{業界}}における{{製品・サービス}}の市場分析を行います。\n\n分析項目:\n1. 市場規模と成長予測\n2. 主要競合他社（{{競合数}}社）\n3. ターゲット顧客層\n4. SWOT分析\n5. {{追加分析項目}}\n\n対象地域: {{地域}}\n分析期間: {{期間}}\n\n具体的なデータと根拠を含めた詳細なレポートを作成してください。',
+                        tags: ['市場分析', 'ビジネス', 'レポート'],
+                        createdAt: Date.now() + 1,
+                        lastUsed: null,
+                        useCount: 0
+                    },
+                    {
+                        id: Date.now() + 2,
+                        name: 'ブログ記事構成案',
+                        description: 'SEOを意識したブログ記事の構成を作成',
+                        category: 'creative',
+                        aiModels: ['claude', 'chatgpt', 'gemini'],
+                        content: 'テーマ: {{記事テーマ}}\nターゲット読者: {{ターゲット層}}\n文字数: {{文字数}}文字程度\n\n以下の構成で記事を作成してください:\n1. 魅力的なタイトル（SEOキーワード: {{キーワード}}を含む）\n2. 導入文（読者の興味を引く）\n3. 本文（{{セクション数}}つのセクション）\n4. まとめ\n5. CTA（行動喚起）\n\nトーン: {{トーン}}\n追加要望: {{追加要望}}',
+                        tags: ['ブログ', 'SEO', 'コンテンツ'],
+                        createdAt: Date.now() + 2,
+                        lastUsed: null,
+                        useCount: 0
+                    }
+                ];
+                
+                promptTemplates = sampleTemplates;
+                saveTemplatesToLocalStorage();
+            }
+        }
+        
+        function saveTemplatesToLocalStorage() {
+            try {
+                localStorage.setItem('promptTemplates', JSON.stringify(promptTemplates));
+            } catch (e) {
+                console.error('Failed to save templates:', e);
+            }
+        }
+        
+        function showTemplateLibrary() {
+            const modal = document.getElementById('templateLibraryModal');
+            renderTemplateGrid();
+            modal.classList.add('active');
+        }
+        
+        function closeTemplateLibrary() {
+            const modal = document.getElementById('templateLibraryModal');
+            modal.classList.remove('active');
+        }
+        
+        function renderTemplateGrid() {
+            const grid = document.getElementById('templateGrid');
+            let filteredTemplates = promptTemplates;
+            
+            // カテゴリフィルタ
+            if (currentCategory !== 'all') {
+                filteredTemplates = filteredTemplates.filter(t => t.category === currentCategory);
+            }
+            
+            // 検索フィルタ
+            const searchTerm = document.getElementById('templateSearch')?.value?.toLowerCase() || '';
+            if (searchTerm) {
+                filteredTemplates = filteredTemplates.filter(t => 
+                    t.name.toLowerCase().includes(searchTerm) ||
+                    t.description.toLowerCase().includes(searchTerm) ||
+                    t.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            // ソート
+            const sortBy = document.getElementById('templateSort')?.value || 'recent';
+            filteredTemplates.sort((a, b) => {
+                switch(sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'category':
+                        return a.category.localeCompare(b.category);
+                    case 'recent':
+                    default:
+                        return (b.lastUsed || 0) - (a.lastUsed || 0);
+                }
+            });
+            
+            if (filteredTemplates.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-gray-500">
+                        <div class="text-4xl mb-3">📭</div>
+                        <p>テンプレートが見つかりません</p>
+                        <button onclick="showCreateTemplate()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            新規作成
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = filteredTemplates.map(template => {
+                const categoryEmoji = {
+                    development: '💻',
+                    business: '📊',
+                    creative: '🎨',
+                    education: '📚',
+                    analysis: '📈'
+                }[template.category] || '📝';
+                
+                return `
+                    <div class="bg-white border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">${categoryEmoji}</span>
+                                <h3 class="font-semibold text-gray-900">${template.name}</h3>
+                            </div>
+                            <div class="flex gap-1">
+                                <button onclick="editTemplate(${template.id})" class="text-gray-500 hover:text-blue-600" title="編集">
+                                    ✏️
+                                </button>
+                                <button onclick="deleteTemplate(${template.id})" class="text-gray-500 hover:text-red-600" title="削除">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">${template.description}</p>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${template.tags.map(tag => `<span class="text-xs px-2 py-1 bg-gray-100 rounded">#${tag}</span>`).join('')}
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="text-xs text-gray-500">
+                                ${template.useCount}回使用
+                            </div>
+                            <button onclick="useTemplate(${template.id})" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                使用
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterTemplatesByCategory(category) {
+            currentCategory = category;
+            
+            // カテゴリボタンのスタイル更新
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'font-medium');
+                if (btn.getAttribute('onclick').includes(`'${category}'`)) {
+                    btn.classList.add('bg-white', 'font-medium');
+                }
+            });
+            
+            renderTemplateGrid();
+        }
+        
+        function searchTemplates() {
+            renderTemplateGrid();
+        }
+        
+        function sortTemplates() {
+            renderTemplateGrid();
+        }
+        
+        function showCreateTemplate() {
+            currentEditingTemplate = null;
+            document.getElementById('templateEditTitle').textContent = '新規テンプレート作成';
+            document.getElementById('templateName').value = '';
+            document.getElementById('templateDescription').value = '';
+            document.getElementById('templateCategory').value = 'development';
+            document.getElementById('templateContent').value = '';
+            document.getElementById('templateTags').value = '';
+            document.querySelectorAll('.ai-model-checkbox').forEach(cb => cb.checked = false);
+            
+            document.getElementById('templateEditModal').classList.add('active');
+        }
+        
+        function editTemplate(id) {
+            const template = promptTemplates.find(t => t.id === id);
+            if (!template) return;
+            
+            currentEditingTemplate = id;
+            document.getElementById('templateEditTitle').textContent = 'テンプレート編集';
+            document.getElementById('templateName').value = template.name;
+            document.getElementById('templateDescription').value = template.description;
+            document.getElementById('templateCategory').value = template.category;
+            document.getElementById('templateContent').value = template.content;
+            document.getElementById('templateTags').value = template.tags.join(', ');
+            
+            document.querySelectorAll('.ai-model-checkbox').forEach(cb => {
+                cb.checked = template.aiModels.includes(cb.value);
+            });
+            
+            document.getElementById('templateEditModal').classList.add('active');
+        }
+        
+        function closeTemplateEdit() {
+            document.getElementById('templateEditModal').classList.remove('active');
+            currentEditingTemplate = null;
+        }
+        
+        function saveTemplate() {
+            const name = document.getElementById('templateName').value.trim();
+            const description = document.getElementById('templateDescription').value.trim();
+            const category = document.getElementById('templateCategory').value;
+            const content = document.getElementById('templateContent').value.trim();
+            const tags = document.getElementById('templateTags').value
+                .split(',')
+                .map(t => t.trim())
+                .filter(t => t);
+            
+            const aiModels = Array.from(document.querySelectorAll('.ai-model-checkbox:checked'))
+                .map(cb => cb.value);
+            
+            if (!name || !content) {
+                alert('テンプレート名と内容は必須です');
+                return;
+            }
+            
+            if (currentEditingTemplate) {
+                // 編集
+                const index = promptTemplates.findIndex(t => t.id === currentEditingTemplate);
+                if (index !== -1) {
+                    promptTemplates[index] = {
+                        ...promptTemplates[index],
+                        name,
+                        description,
+                        category,
+                        content,
+                        tags,
+                        aiModels,
+                        updatedAt: Date.now()
+                    };
+                }
+            } else {
+                // 新規作成
+                promptTemplates.push({
+                    id: Date.now(),
+                    name,
+                    description,
+                    category,
+                    content,
+                    tags,
+                    aiModels,
+                    createdAt: Date.now(),
+                    lastUsed: null,
+                    useCount: 0
+                });
+            }
+            
+            saveTemplatesToLocalStorage();
+            renderTemplateGrid();
+            closeTemplateEdit();
+            
+            // 成功メッセージ
+            const message = currentEditingTemplate ? '更新しました' : '作成しました';
+            showToast(`テンプレートを${message}`);
+        }
+        
+        function deleteTemplate(id) {
+            if (!confirm('このテンプレートを削除しますか？')) return;
+            
+            promptTemplates = promptTemplates.filter(t => t.id !== id);
+            saveTemplatesToLocalStorage();
+            renderTemplateGrid();
+            showToast('テンプレートを削除しました');
+        }
+        
+        function useTemplate(id) {
+            const template = promptTemplates.find(t => t.id === id);
+            if (!template) return;
+            
+            // 変数を検出
+            const variables = extractVariables(template.content);
+            
+            if (variables.length > 0) {
+                // 変数入力ダイアログを表示
+                showVariableInputDialog(template, variables);
+            } else {
+                // 変数がない場合は直接適用
+                applyTemplateContent(template.content);
+                template.lastUsed = Date.now();
+                template.useCount++;
+                saveTemplatesToLocalStorage();
+                closeTemplateLibrary();
+            }
+        }
+        
+        function extractVariables(content) {
+            const regex = /\{\{([^}]+)\}\}/g;
+            const variables = [];
+            let match;
+            
+            while ((match = regex.exec(content)) !== null) {
+                if (!variables.includes(match[1])) {
+                    variables.push(match[1]);
+                }
+            }
+            
+            return variables;
+        }
+        
+        function showVariableInputDialog(template, variables) {
+            const dialog = document.createElement('div');
+            dialog.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[70]';
+            dialog.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold mb-4">変数の入力</h3>
+                    <p class="text-sm text-gray-600 mb-4">${template.name}の変数を入力してください</p>
+                    <div class="space-y-3">
+                        ${variables.map(v => `
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">${v}</label>
+                                <input type="text" data-variable="${v}" 
+                                       class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-6 flex justify-end gap-2">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            キャンセル
+                        </button>
+                        <button onclick="applyTemplateWithVariables(${template.id}, this.closest('.fixed'))" 
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            適用
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+        }
+        
+        function applyTemplateWithVariables(templateId, dialog) {
+            const template = promptTemplates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            let content = template.content;
+            
+            // 変数を置換
+            dialog.querySelectorAll('input[data-variable]').forEach(input => {
+                const variable = input.getAttribute('data-variable');
+                const value = input.value || `[${variable}]`;
+                content = content.replace(new RegExp(`\\{\\{${variable}\\}\\}`, 'g'), value);
+            });
+            
+            applyTemplateContent(content);
+            
+            // 使用履歴を更新
+            template.lastUsed = Date.now();
+            template.useCount++;
+            saveTemplatesToLocalStorage();
+            
+            dialog.remove();
+            closeTemplateLibrary();
+        }
+        
+        function applyTemplateContent(content) {
+            // プレビューエリアに内容を設定
+            document.getElementById('promptOutput').value = content;
+            
+            // タブを切り替えてプレビューを表示
+            switchTab('preview');
+            
+            showToast('テンプレートを適用しました');
+        }
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-[100] transition-opacity duration-300';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
         }
         
         function showPromptHistory() {
